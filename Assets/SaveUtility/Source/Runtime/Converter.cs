@@ -144,6 +144,11 @@ namespace TeamUtility.IO.SaveUtility
 							SystemConvert.ToSingle(value["width"]), SystemConvert.ToSingle(value["height"]));
 		}
 		
+		public static T ToEnum<T>(object value) where T : struct
+		{
+			return ToEnum<T>(value.ToString());
+		}
+		
 		public static T ToEnum<T>(string value) where T : struct
 		{
 			if(!typeof(T).IsEnum)

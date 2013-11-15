@@ -51,14 +51,14 @@ namespace TeamUtility.IO.SaveUtility
 		public void Deserialize(object instance, Dictionary<string, object> data)
 		{
 			Light light = instance as Light;
-			light.type = Convert.ToEnum<LightType>(data["type"].ToString());
-			light.renderMode = Convert.ToEnum<LightRenderMode>(data["renderMode"].ToString());
+			light.type = Convert.ToEnum<LightType>(data["type"]);
+			light.renderMode = Convert.ToEnum<LightRenderMode>(data["renderMode"]);
 			light.alreadyLightmapped = (bool)data["alreadyLightmapped"];
 			light.intensity = System.Convert.ToSingle(data["intensity"]);
 			light.range = System.Convert.ToSingle(data["range"]);
 			light.color = Convert.ToColor((Dictionary<string, object>)data["color"]);
 			light.spotAngle = System.Convert.ToSingle(data["spotAngle"]);
-			light.shadows = Convert.ToEnum<LightShadows>(data["shadows"].ToString());
+			light.shadows = Convert.ToEnum<LightShadows>(data["shadows"]);
 			light.shadowSoftness = System.Convert.ToSingle(data["shadowSoftness"]);
 			light.shadowSoftnessFade = System.Convert.ToSingle(data["shadowSoftnessFade"]);
 			light.shadowStrength = System.Convert.ToSingle(data["shadowStrength"]);

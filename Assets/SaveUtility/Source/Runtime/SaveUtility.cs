@@ -238,7 +238,7 @@ namespace TeamUtility.IO.SaveUtility
 		{
 			Dictionary<string, object> saveTable = new Dictionary<string, object>();
 			int count = 0;
-			int batchSize = _serializers.Count / MAX_FRAMES_TO_GET_DATA;
+			int batchSize = (_serializers.Count < MAX_FRAMES_TO_GET_DATA) ? 1 : _serializers.Count / MAX_FRAMES_TO_GET_DATA;
 			
 			while(count < _serializers.Count)
 			{

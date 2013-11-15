@@ -72,9 +72,9 @@ namespace TeamUtility.IO.SaveUtility
 			body.sleepVelocity = System.Convert.ToSingle(data["sleepVelocity"]);
 			body.sleepAngularVelocity = System.Convert.ToSingle(data["sleepAngularVelocity"]);
 			body.maxAngularVelocity = System.Convert.ToSingle(data["maxAngularVelocity"]);
-			body.constraints = Convert.ToEnum<RigidbodyConstraints>(data["constraints"].ToString());
-			body.collisionDetectionMode = Convert.ToEnum<CollisionDetectionMode>(data["collisionDetectionMode"].ToString());
-			body.interpolation = Convert.ToEnum<RigidbodyInterpolation>(data["interpolation"].ToString());
+			body.constraints = Convert.ToEnum<RigidbodyConstraints>(data["constraints"]);
+			body.collisionDetectionMode = Convert.ToEnum<CollisionDetectionMode>(data["collisionDetectionMode"]);
+			body.interpolation = Convert.ToEnum<RigidbodyInterpolation>(data["interpolation"]);
 			body.solverIterationCount = System.Convert.ToInt32(data["solverIterationCount"]);
 			body.isKinematic = (bool)data["isKinematic"];
 			if(!body.isKinematic)
