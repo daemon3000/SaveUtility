@@ -22,7 +22,6 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
-using System.Runtime.Serialization.Formatters.Binary;
 
 namespace TeamUtility.IO.SaveUtility
 {
@@ -35,13 +34,10 @@ namespace TeamUtility.IO.SaveUtility
 			_outputFilename = outputFilename;
 		}
 		
-		protected override void ThreadFunction()
+		protected override void ThreadFunction(ReadOnlyDictionary<string, object> data)
 		{
-			using(Stream stream = File.Create(_outputFilename))
-			{
-				BinaryFormatter binaryFormatter = new BinaryFormatter();
-				binaryFormatter.Serialize(stream, _data);
-			}
+			BinaryFormatter bf = new BinaryFormatter();
+			bf.Serialize(data, _outputFilename);
 		}
 	}
 }

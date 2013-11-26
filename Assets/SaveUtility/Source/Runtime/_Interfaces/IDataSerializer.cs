@@ -28,6 +28,6 @@ namespace TeamUtility.IO.SaveUtility
 {
 	public interface IDataSerializer
 	{
-		void Serialize(Dictionary<string, object> data);
+		void Serialize(ReadOnlyDictionary<string, object> data);
 	}
 }

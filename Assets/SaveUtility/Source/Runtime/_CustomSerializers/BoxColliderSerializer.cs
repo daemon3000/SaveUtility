@@ -1,4 +1,4 @@
-﻿#region [Copyright (c) 2013 Cristian Alexandru Geambasu]
+#region [Copyright (c) 2013 Cristian Alexandru Geambasu]
 //	Distributed under the terms of an MIT-style license:
 //
 //	The MIT License
@@ -21,31 +21,32 @@
 #endregion
 using UnityEngine;
 using System;
-using System.IO;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace TeamUtility.IO.SaveUtility
 {
-	public sealed class AsyncPlistSerializer : AsyncDataSerializer
+	[CustomSerializer(typeof(BoxCollider))]
+	public sealed class BoxColliderSerializer : IComponentSerializer
 	{
-		private readonly string _outputFilename;
-		private readonly bool _useBinarySerialization;
-		
-		public AsyncPlistSerializer(string outputFilename, bool useBinarySerialization)
+		public Dictionary<string, object> Serialize(object value)
 		{
-			_outputFilename = outputFilename;
-			_useBinarySerialization = useBinarySerialization;
+			BoxCollider collider = value as BoxCollider;
+			Dictionary<string, object> dic = new Dictionary<string, object>();
+			dic.Add("enabled", collider.enabled);
+			dic.Add("isTrigger", collider.isTrigger);
+			dic.Add("center", Convert.FromVector3(collider.center));
+			dic.Add("size", Convert.FromVector3(collider.size));
+			
+			return dic;
 		}
 		
-		protected override void ThreadFunction()
+		public void Deserialize(object instance, Dictionary<string, object> data)
 		{
-			if(_useBinarySerialization) {
-				Plist.WriteBinary(_data, _outputFilename);
-			}
-			else {
-				Plist.WriteXml(_data, _outputFilename);
-			}
+			BoxCollider collider = instance as BoxCollider;
+			collider.isTrigger = (bool)data["isTrigger"];
+			collider.center = Convert.ToVector3((Dictionary<string, object>)data["center"]);
+			collider.size = Convert.ToVector3((Dictionary<string, object>)data["size"]);
+			collider.enabled = (bool)data["enabled"];
 		}
 	}
 }

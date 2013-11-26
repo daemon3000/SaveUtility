@@ -25,28 +25,41 @@ using System.Collections.Generic;
 
 namespace TeamUtility.IO.SaveUtility
 {
-	[CustomSerializer(typeof(BoxCollider))]
-	public sealed class BoxColliderSerializer : IComponentSerializer
+	[CustomSerializer(typeof(Color))]
+	public sealed class ColorConverter : ITypeConverter
 	{
-		public Dictionary<string, object> Serialize(object value)
+		public bool CanConvert(Type type)
 		{
-			BoxCollider collider = value as BoxCollider;
-			Dictionary<string, object> dic = new Dictionary<string, object>();
-			dic.Add("enabled", collider.enabled);
-			dic.Add("isTrigger", collider.isTrigger);
-			dic.Add("center", Convert.FromVector3(collider.center));
-			dic.Add("size", Convert.FromVector3(collider.size));
-			
-			return dic;
+			return (type == typeof(Color));
 		}
 		
-		public void Deserialize(object instance, Dictionary<string, object> data)
+		public object ConvertFrom(object value)
 		{
-			BoxCollider collider = instance as BoxCollider;
-			collider.isTrigger = (bool)data["isTrigger"];
-			collider.center = Convert.ToVector3((Dictionary<string, object>)data["center"]);
-			collider.size = Convert.ToVector3((Dictionary<string, object>)data["size"]);
-			collider.enabled = (bool)data["enabled"];
+			return Convert.FromColor((Color)value);
+		}
+		
+		public object ConvertTo(object data)
+		{
+			return Convert.ToColor((Dictionary<string, object>)data);
+		}
+	}
+	
+	[CustomSerializer(typeof(Color32))]
+	public sealed class Color32Converter : ITypeConverter
+	{
+		public bool CanConvert(Type type)
+		{
+			return (type == typeof(Color32));
+		}
+		
+		public object ConvertFrom(object value)
+		{
+			return Convert.FromColor32((Color32)value);
+		}
+		
+		public object ConvertTo(object data)
+		{
+			return Convert.ToColor32((Dictionary<string, object>)data);
 		}
 	}
 }

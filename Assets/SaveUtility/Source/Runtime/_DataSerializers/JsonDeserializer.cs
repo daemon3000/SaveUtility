@@ -36,7 +36,7 @@ namespace TeamUtility.IO.SaveUtility
 			_inputFilename = inputFilename;
 		}
 		
-		public Dictionary<string, object> Deserialize()
+		public ReadOnlyDictionary<string, object> Deserialize()
 		{
 			Dictionary<string, object> data;
 			using(StreamReader sr = File.OpenText(_inputFilename))
@@ -44,7 +44,7 @@ namespace TeamUtility.IO.SaveUtility
 				data = MiniJson.Deserialize(sr.ReadToEnd()) as Dictionary<string, object>;
 			}
 			
-			return data;
+			return new ReadOnlyDictionary<string, object>(data);
 		}
 	}
 }

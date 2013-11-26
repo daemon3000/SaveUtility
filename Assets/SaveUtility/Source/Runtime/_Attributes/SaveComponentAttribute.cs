@@ -21,24 +21,12 @@
 #endregion
 using UnityEngine;
 using System;
-using System.IO;
 using System.Collections;
-using System.Collections.Generic;
 
 namespace TeamUtility.IO.SaveUtility
 {
-	public sealed class PlistDeserializer : IDataDeserializer 
-	{
-		private string _inputFilename;
+	[AttributeUsage(AttributeTargets.Class)]
+	public sealed class SaveComponentAttribute : System.Attribute {
 		
-		public PlistDeserializer(string inputFilename)
-		{
-			_inputFilename = inputFilename;
-		}
-		
-		public Dictionary<string, object> Deserialize()
-		{
-			return (Dictionary<string, object>)Plist.ReadPlist(_inputFilename);
-		}
 	}
 }

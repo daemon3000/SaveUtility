@@ -25,7 +25,7 @@ using System.Collections;
 
 namespace TeamUtility.IO.SaveUtility
 {
-	[AttributeUsage(AttributeTargets.Class)]
+	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
 	public sealed class CustomSerializerAttribute : System.Attribute
 	{
 		public readonly Type typeToSerialize;

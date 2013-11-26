@@ -21,39 +21,26 @@
 #endregion
 using UnityEngine;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace TeamUtility.IO.SaveUtility
 {
-	[CustomSerializer(typeof(Camera))]
-	public sealed class CameraSerializer : IComponentSerializer
+	[CustomSerializer(typeof(Rect))]
+	public sealed class RectConverter : ITypeConverter
 	{
-		public Dictionary<string, object> Serialize(object value)
+		public bool CanConvert(Type type)
 		{
-			Camera camera = value as Camera;
-			Dictionary<string, object> dic = new Dictionary<string, object>();
-			dic.Add("enabled", camera.enabled);
-			dic.Add("orthographic", camera.orthographic);
-			dic.Add("orthographicSize", camera.orthographicSize);
-			dic.Add("fieldOfView", camera.fieldOfView);
-			dic.Add("nearClipPlane", camera.nearClipPlane);
-			dic.Add("farClipPlane", camera.farClipPlane);
-			dic.Add("depth", camera.depth);
-			
-			return dic;
+			return (type == typeof(Rect));
 		}
 		
-		public void Deserialize(object instance, Dictionary<string, object> data)
+		public object ConvertFrom(object value)
 		{
-			Camera camera = instance as Camera;
-			camera.orthographic = (bool)data["orthographic"];
-			camera.orthographicSize = System.Convert.ToSingle(data["orthographicSize"]);
-			camera.fieldOfView = System.Convert.ToSingle(data["fieldOfView"]);
-			camera.nearClipPlane = System.Convert.ToSingle(data["nearClipPlane"]);
-			camera.farClipPlane = System.Convert.ToSingle(data["farClipPlane"]);
-			camera.depth = System.Convert.ToInt32(data["depth"]);
-			camera.enabled = (bool)data["enabled"];
+			return Convert.FromRect((Rect)value);
+		}
+		
+		public object ConvertTo(object data)
+		{
+			return Convert.ToRect((Dictionary<string, object>)data);
 		}
 	}
 }

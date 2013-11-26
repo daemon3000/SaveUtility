@@ -22,7 +22,6 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
-using System.Runtime.Serialization.Formatters.Binary;
 
 namespace TeamUtility.IO.SaveUtility
 {
@@ -35,16 +34,12 @@ namespace TeamUtility.IO.SaveUtility
 			_inputFilename = inputFilename;
 		}
 		
-		public Dictionary<string, object> Deserialize()
+		public ReadOnlyDictionary<string, object> Deserialize()
 		{
-			Dictionary<string, object> data;
-			using(Stream stream = File.OpenRead(_inputFilename))
-			{
-				BinaryFormatter binaryFormatter = new BinaryFormatter();
-				data = binaryFormatter.Deserialize(stream) as Dictionary<string, object>;
-			}
+			BinaryFormatter bf = new BinaryFormatter();
+			Dictionary<string, object> data = bf.Deserialize(_inputFilename) as Dictionary<string, object>;
 			
-			return data;
+			return new ReadOnlyDictionary<string, object>(data);
 		}
 	}
 }

@@ -61,7 +61,6 @@ namespace TeamUtility.IO.SaveUtility
 		public void Deserialize(object instance, Dictionary<string, object> data)
 		{
 			Transform transform = instance as Transform;
-			
 			if(data["parent"] != null) {
 				SaveUtility saveUtility = SaveUtility.GetInstance(false);
 				transform.parent = saveUtility.GetStoredComponentByID<Transform>((string)data["parent"]);

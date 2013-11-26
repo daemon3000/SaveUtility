@@ -21,31 +21,26 @@
 #endregion
 using UnityEngine;
 using System;
-using System.IO;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace TeamUtility.IO.SaveUtility
 {
-	public sealed class PlistSerializer : IDataSerializer 
+	[CustomSerializer(typeof(Quaternion))]
+	public sealed class QuaternionConverter : ITypeConverter
 	{
-		private string _outputFilename;
-		private bool _useBinarySerialization;
-		
-		public PlistSerializer(string outputFilename, bool useBinarySerialization)
+		public bool CanConvert(Type type)
 		{
-			_outputFilename = outputFilename;
-			_useBinarySerialization = useBinarySerialization;
+			return (type == typeof(Quaternion));
 		}
 		
-		public void Serialize(Dictionary<string, object> data)
+		public object ConvertFrom(object value)
 		{
-			if(_useBinarySerialization) {
-				Plist.WriteBinary(data, _outputFilename);
-			}
-			else {
-				Plist.WriteXml(data, _outputFilename);
-			}
+			return Convert.FromQuaternion((Quaternion)value);
+		}
+		
+		public object ConvertTo(object data)
+		{
+			return Convert.ToQuaternion((Dictionary<string, object>)data);
 		}
 	}
 }

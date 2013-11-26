@@ -46,7 +46,6 @@ namespace TeamUtility.IO.SaveUtility
 		}
 		#endregion
 		
-		public const string VERSION = "0.1.0.0";
 		private const int MAX_FRAMES_TO_GET_DATA = 5;
 		
 		[SerializeField] 
@@ -136,6 +135,19 @@ namespace TeamUtility.IO.SaveUtility
 			return null;
 		}
 		
+		public Component GetStoredComponentByID(string id, string componentType)
+		{
+			GameObject gameObject = GetStoredGameObjectByID(id);
+			if(gameObject != null)
+			{
+				return gameObject.GetComponent(componentType);
+			}
+			else
+			{
+				return null;
+			}
+		}
+		
 		public T GetStoredComponentByID<T>(string id) where T : Component
 		{
 			GameObject gameObject = GetStoredGameObjectByID(id);
@@ -205,7 +217,7 @@ namespace TeamUtility.IO.SaveUtility
 #endif
 		
 		#region [Set/Get Save Table]
-		public void SetSaveTable(Dictionary<string, object> saveTable)
+		public void SetSaveTable(ReadOnlyDictionary<string, object> saveTable)
 		{
 			Queue<GameObjectSerializer> waitingForDestroy = new Queue<GameObjectSerializer>();
 			foreach(GameObjectSerializer serializer in _serializers)
@@ -229,17 +241,19 @@ namespace TeamUtility.IO.SaveUtility
 			}
 		}
 		
-		public void GetSaveTable(Action<Dictionary<string, object>> completedCallback)
+		public void GetSaveTable(Action<ReadOnlyDictionary<string, object>> completedCallback)
 		{
 			StartCoroutine(GetSaveTableOverTime(completedCallback));
 		}
 		
-		private IEnumerator GetSaveTableOverTime(Action<Dictionary<string, object>> completedCallback)
+		private IEnumerator GetSaveTableOverTime(Action<ReadOnlyDictionary<string, object>> completedCallback)
 		{
 			Dictionary<string, object> saveTable = new Dictionary<string, object>();
 			int count = 0;
 			int batchSize = (_serializers.Count < MAX_FRAMES_TO_GET_DATA) ? 1 : _serializers.Count / MAX_FRAMES_TO_GET_DATA;
 			
+			saveTable.Add("sceneName", Application.loadedLevelName);
+			saveTable.Add("sceneIndex", Application.loadedLevel);
 			while(count < _serializers.Count)
 			{
 				for(int i = 0; i < batchSize && count < _serializers.Count; i++, count++)
@@ -249,20 +263,7 @@ namespace TeamUtility.IO.SaveUtility
 				yield return null;
 			}
 			
-			saveTable.Add("metadata", GetMetadata());
-			yield return null;
-			
-			completedCallback(saveTable);
-		}
-		
-		private Dictionary<string, object> GetMetadata()
-		{
-			Dictionary<string, object> metadata = new Dictionary<string, object>();
-			metadata.Add("sceneName", Application.loadedLevelName);
-			metadata.Add("sceneIndex", Application.loadedLevel);
-			metadata.Add("version", VERSION);
-			
-			return metadata;
+			completedCallback(new ReadOnlyDictionary<string, object>(saveTable));
 		}
 		#endregion
 		

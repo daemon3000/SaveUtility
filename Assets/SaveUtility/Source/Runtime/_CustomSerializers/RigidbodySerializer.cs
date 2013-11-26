@@ -1,4 +1,4 @@
-﻿#region [Copyright (c) 2013 Cristian Alexandru Geambasu]
+#region [Copyright (c) 2013 Cristian Alexandru Geambasu]
 //	Distributed under the terms of an MIT-style license:
 //
 //	The MIT License
@@ -29,7 +29,7 @@ namespace TeamUtility.IO.SaveUtility
 	[CustomSerializer(typeof(Rigidbody))]
 	public sealed class RigidbodySerializer : IComponentSerializer
 	{
-		public Dictionary<string, object> Serialize (object value)
+		public Dictionary<string, object> Serialize(object value)
 		{
 			Rigidbody body = value as Rigidbody;
 			Dictionary<string, object> dic = new Dictionary<string, object>();
@@ -57,7 +57,7 @@ namespace TeamUtility.IO.SaveUtility
 			return dic;
 		}
 		
-		public void Deserialize (object instance, Dictionary<string, object> data)
+		public void Deserialize(object instance, Dictionary<string, object> data)
 		{
 			Rigidbody body = instance as Rigidbody;
 			body.isKinematic = true;

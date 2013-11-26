@@ -1,4 +1,4 @@
-﻿#region [Copyright (c) 2013 Cristian Alexandru Geambasu]
+#region [Copyright (c) 2013 Cristian Alexandru Geambasu]
 //	Distributed under the terms of an MIT-style license:
 //
 //	The MIT License
@@ -21,31 +21,32 @@
 #endregion
 using UnityEngine;
 using System;
-using System.IO;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace TeamUtility.IO.SaveUtility
 {
-	public sealed class AsyncJsonSerializer : AsyncDataSerializer
+	[CustomSerializer(typeof(SphereCollider))]
+	public sealed class SphereColliderSerializer : IComponentSerializer
 	{
-		private readonly string _outputFilename;
-		
-		public AsyncJsonSerializer(string outputFilename)
+		public Dictionary<string, object> Serialize(object value)
 		{
-			_outputFilename = outputFilename;
+			SphereCollider collider = value as SphereCollider;
+			Dictionary<string, object> dic = new Dictionary<string, object>();
+			dic.Add("enabled", collider.enabled);
+			dic.Add("isTrigger", collider.isTrigger);
+			dic.Add("center", Convert.FromVector3(collider.center));
+			dic.Add("radius", collider.radius);
+			
+			return dic;
 		}
 		
-		protected override void ThreadFunction(ReadOnlyDictionary<string, object> data)
+		public void Deserialize(object instance, Dictionary<string, object> data)
 		{
-			using(StreamWriter sw = File.CreateText(_outputFilename))
-			{
-#if UNITY_EDITOR
-				sw.Write(MiniJson.Serialize(data, true));
-#else
-				sw.Write(MiniJson.Serialize(data, false));
-#endif
-			}
+			SphereCollider collider = instance as SphereCollider;
+			collider.isTrigger = (bool)data["isTrigger"];
+			collider.center = Convert.ToVector3((Dictionary<string, object>)data["center"]);
+			collider.radius = System.Convert.ToSingle(data["radius"]);
+			collider.enabled = (bool)data["enabled"];
 		}
 	}
 }

@@ -146,22 +146,32 @@ namespace TeamUtility.IO.SaveUtility
 		
 		public static T ToEnum<T>(object value) where T : struct
 		{
-			return ToEnum<T>(value.ToString());
+			return (T)ToEnum(value.ToString(), typeof(T));
 		}
 		
 		public static T ToEnum<T>(string value) where T : struct
 		{
-			if(!typeof(T).IsEnum)
+			return (T)ToEnum(value, typeof(T));
+		}
+		
+		public static object ToEnum(object value, Type enumType)
+		{
+			return ToEnum(value.ToString(), enumType);
+		}
+		
+		public static object ToEnum(string value, Type enumType)
+		{
+			if(!enumType.IsEnum)
 				throw new ArgumentException("The type you are trying to cast to is not an enumeration.", "value");
 
 			if(string.IsNullOrEmpty(value)) {
-				return default(T);
+				return 0;
 			}
 			try {
-				return (T)Enum.Parse(typeof(T), value, true);
+				return Enum.Parse(enumType, value, true);
 			}
 			catch {
-				string message = string.Format("Cannot cast string to {0}.", typeof(T).Name);
+				string message = string.Format("Cannot cast string to {0}.", enumType.Name);
 				throw new InvalidCastException(message);
 			}
 		}

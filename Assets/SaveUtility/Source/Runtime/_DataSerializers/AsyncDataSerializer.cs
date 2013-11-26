@@ -21,6 +21,7 @@
 #endregion
 using UnityEngine;
 using System;
+using System.Threading;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -28,11 +29,10 @@ namespace TeamUtility.IO.SaveUtility
 {
 	public abstract class AsyncDataSerializer : IAsyncDataSerializer
 	{
-		protected Dictionary<string, object> _data;
 		private bool _isDone;
 		private string _error;
+		private Thread _thread;
 		private object _handle = new object();
-		private System.Threading.Thread _thread;
 		
 		public bool IsDone 
 		{
@@ -74,18 +74,17 @@ namespace TeamUtility.IO.SaveUtility
 			}
 		}
 		
-		public void Serialize(Dictionary<string, object> data)
+		public void Serialize(ReadOnlyDictionary<string, object> data)
 		{
-			_data = data;
-			_thread = new System.Threading.Thread(Run);
-			_thread.Start();
+			_thread = new Thread(Run);
+			_thread.Start(data);
 		}
 	
-		protected abstract void ThreadFunction();
+		protected abstract void ThreadFunction(ReadOnlyDictionary<string, object> data);
 		
-		private void Run()
+		private void Run(object data)
 		{
-			ThreadFunction();
+			ThreadFunction((ReadOnlyDictionary<string, object>)data);
 			IsDone = true;
 		}
 	}

@@ -25,28 +25,10 @@ using System.Collections.Generic;
 
 namespace TeamUtility.IO.SaveUtility
 {
-	[CustomSerializer(typeof(SphereCollider))]
-	public sealed class SphereColliderSerializer : IComponentSerializer
+	public interface ITypeConverter
 	{
-		public Dictionary<string, object> Serialize(object value)
-		{
-			SphereCollider collider = value as SphereCollider;
-			Dictionary<string, object> dic = new Dictionary<string, object>();
-			dic.Add("enabled", collider.enabled);
-			dic.Add("isTrigger", collider.isTrigger);
-			dic.Add("center", Convert.FromVector3(collider.center));
-			dic.Add("radius", collider.radius);
-			
-			return dic;
-		}
-		
-		public void Deserialize(object instance, Dictionary<string, object> data)
-		{
-			SphereCollider collider = instance as SphereCollider;
-			collider.isTrigger = (bool)data["isTrigger"];
-			collider.center = Convert.ToVector3((Dictionary<string, object>)data["center"]);
-			collider.radius = System.Convert.ToSingle(data["radius"]);
-			collider.enabled = (bool)data["enabled"];
-		}
+		bool CanConvert(Type type);
+		object ConvertFrom(object value);
+		object ConvertTo(object data);
 	}
 }

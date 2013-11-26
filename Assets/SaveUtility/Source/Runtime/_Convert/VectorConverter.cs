@@ -21,31 +21,64 @@
 #endregion
 using UnityEngine;
 using System;
-using System.IO;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace TeamUtility.IO.SaveUtility
 {
-	public sealed class AsyncJsonSerializer : AsyncDataSerializer
+	[CustomSerializer(typeof(Vector2))]
+	public sealed class Vector2Converter : ITypeConverter
 	{
-		private readonly string _outputFilename;
-		
-		public AsyncJsonSerializer(string outputFilename)
+		public bool CanConvert(Type type)
 		{
-			_outputFilename = outputFilename;
+			return (type == typeof(Vector2));
 		}
 		
-		protected override void ThreadFunction(ReadOnlyDictionary<string, object> data)
+		public object ConvertFrom(object value)
 		{
-			using(StreamWriter sw = File.CreateText(_outputFilename))
-			{
-#if UNITY_EDITOR
-				sw.Write(MiniJson.Serialize(data, true));
-#else
-				sw.Write(MiniJson.Serialize(data, false));
-#endif
-			}
+			return Convert.FromVector2((Vector2)value);
+		}
+		
+		public object ConvertTo(object data)
+		{
+			return Convert.ToVector2((Dictionary<string, object>)data);
+		}
+	}
+	
+	[CustomSerializer(typeof(Vector3))]
+	public sealed class Vector3Converter : ITypeConverter
+	{
+		public bool CanConvert(Type type)
+		{
+			return (type == typeof(Vector3));
+		}
+		
+		public object ConvertFrom(object value)
+		{
+			return Convert.FromVector3((Vector3)value);
+		}
+		
+		public object ConvertTo(object data)
+		{
+			return Convert.ToVector3((Dictionary<string, object>)data);
+		}
+	}
+	
+	[CustomSerializer(typeof(Vector4))]
+	public sealed class Vector4Converter : ITypeConverter
+	{
+		public bool CanConvert(Type type)
+		{
+			return (type == typeof(Vector4));
+		}
+		
+		public object ConvertFrom(object value)
+		{
+			return Convert.FromVector4((Vector4)value);
+		}
+		
+		public object ConvertTo(object data)
+		{
+			return Convert.ToVector4((Dictionary<string, object>)data);
 		}
 	}
 }

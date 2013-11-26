@@ -36,7 +36,7 @@ namespace TeamUtility.IO.SaveUtility
 			_outputFilename = outputFilename;
 		}
 		
-		public void Serialize(Dictionary<string, object> data)
+		public void Serialize(ReadOnlyDictionary<string, object> data)
 		{
 			using(StreamWriter sw = File.CreateText(_outputFilename))
 			{

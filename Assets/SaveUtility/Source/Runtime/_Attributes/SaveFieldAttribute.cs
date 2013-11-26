@@ -21,31 +21,12 @@
 #endregion
 using UnityEngine;
 using System;
-using System.IO;
 using System.Collections;
-using System.Collections.Generic;
 
 namespace TeamUtility.IO.SaveUtility
 {
-	public sealed class AsyncJsonSerializer : AsyncDataSerializer
-	{
-		private readonly string _outputFilename;
-		
-		public AsyncJsonSerializer(string outputFilename)
-		{
-			_outputFilename = outputFilename;
-		}
-		
-		protected override void ThreadFunction(ReadOnlyDictionary<string, object> data)
-		{
-			using(StreamWriter sw = File.CreateText(_outputFilename))
-			{
-#if UNITY_EDITOR
-				sw.Write(MiniJson.Serialize(data, true));
-#else
-				sw.Write(MiniJson.Serialize(data, false));
-#endif
-			}
-		}
+	[AttributeUsage(AttributeTargets.Field)]
+	public sealed class SaveFieldAttribute : System.Attribute {
+	
 	}
 }

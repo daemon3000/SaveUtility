@@ -28,6 +28,6 @@ namespace TeamUtility.IO.SaveUtility
 {
 	public interface IDataDeserializer
 	{
-		Dictionary<string, object> Deserialize();
+		ReadOnlyDictionary<string, object> Deserialize();
 	}
 }

@@ -1,4 +1,4 @@
-﻿#region [Copyright (c) 2013 Cristian Alexandru Geambasu]
+#region [Copyright (c) 2013 Cristian Alexandru Geambasu]
 //	Distributed under the terms of an MIT-style license:
 //
 //	The MIT License
@@ -21,47 +21,36 @@
 #endregion
 using UnityEngine;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace TeamUtility.IO.SaveUtility
 {
-	[CustomSerializer(typeof(Light))]
-	public sealed class LightSerializer : IComponentSerializer
+	[CustomSerializer(typeof(CapsuleCollider))]
+	public sealed class CapsuleColliderSerializer : IComponentSerializer
 	{
 		public Dictionary<string, object> Serialize(object value)
 		{
-			Light light = value as Light;
+			CapsuleCollider collider = value as CapsuleCollider;
 			Dictionary<string, object> dic = new Dictionary<string, object>();
-			dic.Add("type", light.type);
-			dic.Add("renderMode", light.renderMode);
-			dic.Add("alreadyLightmapped", light.alreadyLightmapped);
-			dic.Add("intensity", light.intensity);
-			dic.Add("range", light.range);
-			dic.Add("color", Convert.FromColor(light.color));
-			dic.Add("spotAngle", light.spotAngle);
-			dic.Add("shadows", light.shadows);
-			dic.Add("shadowSoftness", light.shadowSoftness);
-			dic.Add("shadowSoftnessFade", light.shadowSoftnessFade);
-			dic.Add("shadowStrength", light.shadowStrength);
+			dic.Add("enabled", collider.enabled);
+			dic.Add("isTrigger", collider.isTrigger);
+			dic.Add("center", Convert.FromVector3(collider.center));
+			dic.Add("radius", collider.radius);
+			dic.Add("height", collider.height);
+			dic.Add("direction", collider.direction);
 			
 			return dic;
 		}
 		
 		public void Deserialize(object instance, Dictionary<string, object> data)
 		{
-			Light light = instance as Light;
-			light.type = Convert.ToEnum<LightType>(data["type"]);
-			light.renderMode = Convert.ToEnum<LightRenderMode>(data["renderMode"]);
-			light.alreadyLightmapped = (bool)data["alreadyLightmapped"];
-			light.intensity = System.Convert.ToSingle(data["intensity"]);
-			light.range = System.Convert.ToSingle(data["range"]);
-			light.color = Convert.ToColor((Dictionary<string, object>)data["color"]);
-			light.spotAngle = System.Convert.ToSingle(data["spotAngle"]);
-			light.shadows = Convert.ToEnum<LightShadows>(data["shadows"]);
-			light.shadowSoftness = System.Convert.ToSingle(data["shadowSoftness"]);
-			light.shadowSoftnessFade = System.Convert.ToSingle(data["shadowSoftnessFade"]);
-			light.shadowStrength = System.Convert.ToSingle(data["shadowStrength"]);
+			CapsuleCollider collider = instance as CapsuleCollider;
+			collider.isTrigger = (bool)data["isTrigger"];
+			collider.center = Convert.ToVector3((Dictionary<string, object>)data["center"]);
+			collider.radius = System.Convert.ToSingle(data["radius"]);
+			collider.height = System.Convert.ToSingle(data["height"]);
+			collider.direction = System.Convert.ToInt32(data["direction"]);
+			collider.enabled = (bool)data["enabled"];
 		}
 	}
 }

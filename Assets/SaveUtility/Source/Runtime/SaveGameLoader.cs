@@ -32,7 +32,7 @@ namespace TeamUtility.IO.SaveUtility
 		
 		private bool _canShowOverlay = false;
 		private Texture2D _overlayTexture;
-		private Dictionary<string, object> _saveTable;
+		private ReadOnlyDictionary<string, object> _saveTable;
 		
 		private void Awake()
 		{
@@ -70,25 +70,9 @@ namespace TeamUtility.IO.SaveUtility
 			if(deserializer == null)
 				throw new ArgumentNullException("deserializer");
 			
-			try {
-				_saveTable = deserializer.Deserialize();
-				Dictionary<string, object> meta = (Dictionary<string, object>)_saveTable["metadata"];
-				string saveVersion = meta["version"].ToString();
-				if(SaveUtility.VERSION != saveVersion) {
-					throw new InvalidSaveVersionException(SaveUtility.VERSION, saveVersion);
-				}
-				
-				_canShowOverlay = true;
-				Application.LoadLevel(meta["sceneName"].ToString());
-			}
-			catch (System.Exception ex) {
-				if(ex is InvalidSaveVersionException) {
-					throw;
-				}
-				else {
-					throw new InvalidSaveException("Unable to load save file.", ex);
-				}
-			}
+			_canShowOverlay = true;
+			_saveTable = deserializer.Deserialize();
+			Application.LoadLevel((string)_saveTable["sceneName"]);
 		}
 		
 		public static SaveGameLoader CreateInstance()

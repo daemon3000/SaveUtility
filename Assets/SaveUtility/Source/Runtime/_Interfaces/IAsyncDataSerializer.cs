@@ -29,6 +29,6 @@ namespace TeamUtility.IO.SaveUtility
 	public interface IAsyncDataSerializer
 	{
 		bool IsDone { get; }
-		void Serialize(Dictionary<string, object> data);
+		void Serialize(ReadOnlyDictionary<string, object> data);
 	}
 }
