@@ -56,6 +56,8 @@ namespace TeamUtility.IO.SaveUtility
 		
 		private void Awake()
 		{
+			//	If a GameObjectSerializer is instantiated at runtime, it will not be registered with the SaveUtility.
+			//	The task of managing the GameObjectSerializer should fall to a RuntimeObjectSerializer, if one is available.
 #if UNITY_EDITOR
 			if(!UnityEditor.EditorApplication.isPlaying)
 			{
@@ -100,56 +102,6 @@ namespace TeamUtility.IO.SaveUtility
 			}
 #endif
 			_saveUtility.RemoveGameObjectSerializer(this);
-		}
-		
-		private static void BuildCustomSerializerTable()
-		{
-			if(_customSerializerTable == null) {
-				_customSerializerTable = new Dictionary<Type, IComponentSerializer>();
-			}
-			else {
-				_customSerializerTable.Clear();
-			}
-			
-			foreach(Type typeOfSerializer in GetComponentSerializerTypes())
-			{
-				object[] attributes = typeOfSerializer.GetCustomAttributes(typeof(CustomSerializerAttribute), false);
-				CustomSerializerAttribute attribute = attributes[0] as CustomSerializerAttribute;
-				
-				if(!_customSerializerTable.ContainsKey(attribute.typeToSerialize)) 
-				{
-					IComponentSerializer serializer = Activator.CreateInstance(typeOfSerializer) as IComponentSerializer;
-					if(serializer != null)
-					{
-						_customSerializerTable.Add(attribute.typeToSerialize, serializer);
-					}
-				}
-			}
-		}
-		
-		private static void SetTypeConverters()
-		{
-			if(_typeConverters == null) {
-				_typeConverters = new Dictionary<Type, ITypeConverter>();
-			}
-			else {
-				_typeConverters.Clear();
-			}
-			
-			foreach(Type typeOfConverter in GetTypeConverters())
-			{
-				object[] attributes = typeOfConverter.GetCustomAttributes(typeof(CustomSerializerAttribute), false);
-				CustomSerializerAttribute attribute = attributes[0] as CustomSerializerAttribute;
-				
-				if(!_typeConverters.ContainsKey(attribute.typeToSerialize)) 
-				{
-					ITypeConverter converter = Activator.CreateInstance(typeOfConverter) as ITypeConverter;
-					if(converter != null)
-					{
-						_typeConverters.Add(attribute.typeToSerialize, converter);
-					}
-				}
-			}
 		}
 		
 		public Dictionary<string, object> Serialize()
@@ -220,6 +172,7 @@ namespace TeamUtility.IO.SaveUtility
 			gameObject.name = data["name"].ToString();
 			gameObject.tag = data["tag"].ToString();
 			gameObject.layer = System.Convert.ToInt32(data["layer"]);
+			gameObject.SendMessage("OnDeserialized", SendMessageOptions.DontRequireReceiver);
 			
 			bool activeSelf = (bool)data["activeSelf"];
 			if(activeSelf != gameObject.activeSelf) 
@@ -228,7 +181,7 @@ namespace TeamUtility.IO.SaveUtility
 			}
 		}
 		
-		#region [Auto Serialization]
+		#region [Component Serialization]
 		private Dictionary<string, object> SerializeComponent(Component instance, Type componentType)
 		{
 			Dictionary<string, object> data = new Dictionary<string, object>();
@@ -380,8 +333,6 @@ namespace TeamUtility.IO.SaveUtility
 					SetFieldValue(instance, fi, value);
 				}
 			}
-			
-			gameObject.SendMessage("OnDeserialized", SendMessageOptions.DontRequireReceiver);
 		}
 		
 		private void SetFieldValue(Component instance, FieldInfo fieldInfo, object value)
@@ -508,11 +459,11 @@ namespace TeamUtility.IO.SaveUtility
 			return (IList)list;
 		}
 		
-		private IDictionary SetDictionaryValue(Component instance, FieldInfo fieldInfo, Type fieldType, object value)
+		private void SetDictionaryValue(Component instance, FieldInfo fieldInfo, Type fieldType, object value)
 		{
 			Type[] genericArguments = fieldType.GetGenericArguments();
 			if(genericArguments[0] != typeof(string)) {
-				return null;
+				return;
 			}
 			
 			Dictionary<string, object> rawDictionary = value as Dictionary<string, object>;
@@ -547,7 +498,7 @@ namespace TeamUtility.IO.SaveUtility
 				}
 			}
 			
-			return (IDictionary)dictionary;
+			fieldInfo.SetValue(instance, dictionary);
 		}
 		#endregion
 		
@@ -621,6 +572,56 @@ namespace TeamUtility.IO.SaveUtility
 			}
 			
 			return false;
+		}
+		
+		private static void BuildCustomSerializerTable()
+		{
+			if(_customSerializerTable == null) {
+				_customSerializerTable = new Dictionary<Type, IComponentSerializer>();
+			}
+			else {
+				_customSerializerTable.Clear();
+			}
+			
+			foreach(Type typeOfSerializer in GetComponentSerializerTypes())
+			{
+				object[] attributes = typeOfSerializer.GetCustomAttributes(typeof(CustomSerializerAttribute), false);
+				CustomSerializerAttribute attribute = attributes[0] as CustomSerializerAttribute;
+				
+				if(!_customSerializerTable.ContainsKey(attribute.typeToSerialize)) 
+				{
+					IComponentSerializer serializer = Activator.CreateInstance(typeOfSerializer) as IComponentSerializer;
+					if(serializer != null)
+					{
+						_customSerializerTable.Add(attribute.typeToSerialize, serializer);
+					}
+				}
+			}
+		}
+		
+		private static void SetTypeConverters()
+		{
+			if(_typeConverters == null) {
+				_typeConverters = new Dictionary<Type, ITypeConverter>();
+			}
+			else {
+				_typeConverters.Clear();
+			}
+			
+			foreach(Type typeOfConverter in GetTypeConverters())
+			{
+				object[] attributes = typeOfConverter.GetCustomAttributes(typeof(CustomSerializerAttribute), false);
+				CustomSerializerAttribute attribute = attributes[0] as CustomSerializerAttribute;
+				
+				if(!_typeConverters.ContainsKey(attribute.typeToSerialize)) 
+				{
+					ITypeConverter converter = Activator.CreateInstance(typeOfConverter) as ITypeConverter;
+					if(converter != null)
+					{
+						_typeConverters.Add(attribute.typeToSerialize, converter);
+					}
+				}
+			}
 		}
 		#endregion
 	}

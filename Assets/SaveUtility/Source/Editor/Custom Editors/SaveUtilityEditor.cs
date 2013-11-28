@@ -34,6 +34,8 @@ namespace TeamUtility.Editor.IO.SaveUtility
 		private SerializedProperty _requiredAssets;
 		private SerializedProperty _serializers;
 		private GUIContent _removeButtonInfo = new GUIContent("R", "Remove");
+		private GUIContent _upButtonInfo = new GUIContent("U", "Move Up");
+		private GUIContent _downButtonInfo = new GUIContent("D", "Move Down");
 		private int _toolbarSelection = 0;
 		private string[] _toolbarOptions = new string[] { "Tracked Objects", "Required Assets" };
 		
@@ -75,10 +77,18 @@ namespace TeamUtility.Editor.IO.SaveUtility
 				}
 				
 				EditorGUILayout.BeginHorizontal();
-				EditorGUILayout.LabelField(string.Format("{0} - {1}", serializer.name, serializer.ID));
+				EditorGUILayout.LabelField(string.Format("{0} - {1}", serializer.name, serializer.ID), GUILayout.Width(Screen.width - 130.0f));
 				if(GUILayout.Button("Select", GUILayout.Width(60.0f)))
 				{
 					Selection.activeGameObject = serializer.gameObject;
+				}
+				if(GUILayout.Button(_upButtonInfo, GUILayout.Width(22.5f)) && i > 0)
+				{
+					_serializers.MoveArrayElement(i, i - 1);
+				}
+				if(GUILayout.Button(_downButtonInfo, GUILayout.Width(22.5f)) && i < _serializers.arraySize - 1)
+				{
+					_serializers.MoveArrayElement(i, i + 1);
 				}
 				EditorGUILayout.EndHorizontal();
 			}

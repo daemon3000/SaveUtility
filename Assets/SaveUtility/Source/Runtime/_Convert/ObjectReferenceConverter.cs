@@ -65,7 +65,7 @@ namespace TeamUtility.IO.SaveUtility
 			if(gameObject != null)
 			{
 				UniqueIdentifier uid = gameObject.GetComponent<UniqueIdentifier>();
-				if(uid != null && !(uid is GameObjectSerializer))
+				if(uid != null && !string.IsNullOrEmpty(uid.ID))
 				{
 					return uid.ID;
 				}
@@ -109,7 +109,7 @@ namespace TeamUtility.IO.SaveUtility
 			if(component != null)
 			{
 				UniqueIdentifier uid = component.GetComponent<UniqueIdentifier>();
-				if(uid != null && !(uid is GameObjectSerializer))
+				if(uid != null && !string.IsNullOrEmpty(uid.ID))
 				{
 					Dictionary<string, object> data = new Dictionary<string, object>
 					{

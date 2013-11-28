@@ -55,24 +55,8 @@ namespace TeamUtility.IO.SaveUtility
 		
 		private Dictionary<string, GameObject> _referenceTable;
 		private Dictionary<string, AssetIDPair> _assetTable;
+		private List<RuntimeInstanceSerializer> _runtimeSerializers;
 		private static SaveUtility _instance;
-		
-		public void AddGameObjectSerializer(GameObjectSerializer serializer)
-		{
-			if(!_serializers.Contains(serializer)) {
-				_serializers.Add(serializer);
-			}
-		}
-		
-		public bool RemoveGameObjectSerializer(GameObjectSerializer serializer)
-		{
-			return _serializers.Remove(serializer);
-		}
-		
-		public int GetGameObjectSerializerCount()
-		{
-			return _serializers.Count;
-		}
 		
 		private void Awake()
 		{
@@ -100,6 +84,7 @@ namespace TeamUtility.IO.SaveUtility
 			}
 			
 			_instance = this;
+			_runtimeSerializers = new List<RuntimeInstanceSerializer>();
 			BuildReferenceTable();
 			BuildAssetTable();
 		}
@@ -115,8 +100,39 @@ namespace TeamUtility.IO.SaveUtility
 			}
 		}
 		
+		private void BuildAssetTable()
+		{
+			_assetTable = new Dictionary<string, AssetIDPair>();
+			
+			foreach(AssetIDPair pair in _requiredAssets)
+			{
+				_assetTable.Add(pair.id, pair);
+			}
+		}
+		
+		public void AddGameObjectSerializer(GameObjectSerializer serializer)
+		{
+			if(!_serializers.Contains(serializer)) {
+				_serializers.Add(serializer);
+			}
+		}
+		
+		public bool RemoveGameObjectSerializer(GameObjectSerializer serializer)
+		{
+			return _serializers.Remove(serializer);
+		}
+		
+		public int GetGameObjectSerializerCount()
+		{
+			return _serializers.Count;
+		}
+		
 		public GameObject GetStoredGameObjectByID(string id)
 		{
+			if(string.IsNullOrEmpty(id)) {
+				return null;
+			}
+			
 			GameObject gameObject;
 			_referenceTable.TryGetValue(id, out gameObject);
 			
@@ -137,42 +153,40 @@ namespace TeamUtility.IO.SaveUtility
 		
 		public Component GetStoredComponentByID(string id, string componentType)
 		{
+			if(string.IsNullOrEmpty(id)) {
+				return null;
+			}
+			
 			GameObject gameObject = GetStoredGameObjectByID(id);
 			if(gameObject != null)
 			{
 				return gameObject.GetComponent(componentType);
 			}
-			else
-			{
-				return null;
-			}
+			
+			return null;
 		}
 		
 		public T GetStoredComponentByID<T>(string id) where T : Component
 		{
+			if(string.IsNullOrEmpty(id)) {
+				return null;
+			}
+			
 			GameObject gameObject = GetStoredGameObjectByID(id);
 			if(gameObject != null)
 			{
 				return gameObject.GetComponent<T>();
 			}
-			else
-			{
-				return null;
-			}
-		}
-		
-		private void BuildAssetTable()
-		{
-			_assetTable = new Dictionary<string, AssetIDPair>();
 			
-			foreach(AssetIDPair pair in _requiredAssets)
-			{
-				_assetTable.Add(pair.id, pair);
-			}
+			return null;
 		}
 		
 		public UnityEngine.Object GetAssetByID(string id)
 		{
+			if(string.IsNullOrEmpty(id)) {
+				return null;
+			}
+			
 			AssetIDPair result = null;
 			_assetTable.TryGetValue(id, out result);
 			
@@ -219,6 +233,12 @@ namespace TeamUtility.IO.SaveUtility
 		#region [Set/Get Save Table]
 		public void SetSaveTable(ReadOnlyDictionary<string, object> saveTable)
 		{
+			SetGameObjectSerializers(saveTable);
+			SetRuntimeInstanceSerializers(saveTable);
+		}
+		
+		private void SetGameObjectSerializers(ReadOnlyDictionary<string, object> saveTable)
+		{
 			Queue<GameObjectSerializer> waitingForDestroy = new Queue<GameObjectSerializer>();
 			foreach(GameObjectSerializer serializer in _serializers)
 			{
@@ -241,6 +261,29 @@ namespace TeamUtility.IO.SaveUtility
 			}
 		}
 		
+		private void SetRuntimeInstanceSerializers(ReadOnlyDictionary<string, object> saveTable)
+		{
+			_runtimeSerializers.Clear();
+			
+			List<object> runtimeData = saveTable["runtime_objects"] as List<object>;
+			foreach(object obj in runtimeData)
+			{
+				if(obj != null) 
+				{
+					GameObject serializerGO = new GameObject("RuntimeInstanceSerializer");
+					RuntimeInstanceSerializer serializer = serializerGO.AddComponent<RuntimeInstanceSerializer>();
+					if(serializer.Deserialize((Dictionary<string, object>)obj))
+					{
+						_runtimeSerializers.Add(serializer);
+					}
+					else
+					{
+						UnityEngine.Object.Destroy(serializerGO);
+					}
+				}
+			}
+		}
+		
 		public void GetSaveTable(Action<ReadOnlyDictionary<string, object>> completedCallback)
 		{
 			StartCoroutine(GetSaveTableOverTime(completedCallback));
@@ -249,11 +292,13 @@ namespace TeamUtility.IO.SaveUtility
 		private IEnumerator GetSaveTableOverTime(Action<ReadOnlyDictionary<string, object>> completedCallback)
 		{
 			Dictionary<string, object> saveTable = new Dictionary<string, object>();
+			List<object> runtimeData = new List<object>();
 			int count = 0;
 			int batchSize = (_serializers.Count < MAX_FRAMES_TO_GET_DATA) ? 1 : _serializers.Count / MAX_FRAMES_TO_GET_DATA;
 			
 			saveTable.Add("sceneName", Application.loadedLevelName);
 			saveTable.Add("sceneIndex", Application.loadedLevel);
+			
 			while(count < _serializers.Count)
 			{
 				for(int i = 0; i < batchSize && count < _serializers.Count; i++, count++)
@@ -262,6 +307,26 @@ namespace TeamUtility.IO.SaveUtility
 				}
 				yield return null;
 			}
+			
+			count = 0;
+			while(count < _runtimeSerializers.Count)
+			{
+				for(int i = 0; i < batchSize && count < _runtimeSerializers.Count; i++, count++)
+				{
+					if(_runtimeSerializers[count] != null)
+					{
+						runtimeData.Add(_runtimeSerializers[count].Serialize());
+					}
+					else
+					{
+						_runtimeSerializers.RemoveAt(count);
+						count--;
+						i--;
+					}
+				}
+				yield return null;
+			}
+			saveTable.Add("runtime_objects", runtimeData);
 			
 			completedCallback(new ReadOnlyDictionary<string, object>(saveTable));
 		}
@@ -297,6 +362,23 @@ namespace TeamUtility.IO.SaveUtility
 			
 			GameObject gameObject = new GameObject("SaveUtility");
 			SaveUtility instance = gameObject.AddComponent<SaveUtility>();
+			
+			return instance;
+		}
+		
+		public static GameObject InstantiateSavable(GameObject template)
+		{
+			return InstantiateSavable(template, Vector3.zero, Quaternion.identity);
+		}
+		
+		public static GameObject InstantiateSavable(GameObject template, Vector3 position, Quaternion rotation)
+		{
+			GameObject instance = GameObject.Instantiate(template, position, rotation) as GameObject;
+			GameObject serializerGO = new GameObject("RuntimeInstanceSerializer");
+			RuntimeInstanceSerializer serializer = serializerGO.AddComponent<RuntimeInstanceSerializer>();
+			serializer.Initialize(template, instance);
+			serializer.transform.parent = instance.transform;
+			SaveUtility._instance._runtimeSerializers.Add(serializer);
 			
 			return instance;
 		}
