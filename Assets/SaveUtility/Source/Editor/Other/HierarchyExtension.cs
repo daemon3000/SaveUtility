@@ -45,7 +45,7 @@ namespace TeamUtility.Editor.IO.SaveUtility
 				if(value != _drawIcons)
 				{
 					_drawIcons = value;
-					PlayerPrefs.SetInt("HierarchyExtension.drawIcons", _drawIcons ? 1 : 0);
+					EditorPrefs.SetBool("HierarchyExtension.drawIcons", _drawIcons);
 					
 					if(_drawIcons)
 					{
@@ -65,7 +65,7 @@ namespace TeamUtility.Editor.IO.SaveUtility
 			_gameObejctIcon = EditorGUIUtility.Load("SaveUtility/Icons/game_object.png") as Texture;
 			_saveUtilityIcon = EditorGUIUtility.Load("SaveUtility/Icons/save_utility.png") as Texture;
 			
-			_drawIcons = (PlayerPrefs.GetInt("HierarchyExtension.drawIcons", 1) == 1);
+			_drawIcons = EditorPrefs.GetBool("HierarchyExtension.drawIcons", false);
 			if(_drawIcons)
 			{
 				EditorApplication.hierarchyWindowItemOnGUI += HandleHierarchyItemGUI;
@@ -74,45 +74,25 @@ namespace TeamUtility.Editor.IO.SaveUtility
 		
 		private static void HandleHierarchyItemGUI(int instanceID, Rect selectionRect)
 		{
-			TeamUtility.IO.SaveUtility.SaveUtility saveUtility = TeamUtility.IO.SaveUtility.SaveUtility.GetInstance(false);
 			Rect drawRect = selectionRect;
-			drawRect.x = drawRect.xMax - drawRect.height;
+			drawRect.x = drawRect.xMax - (drawRect.height + 5.0f);
 			
-			if(saveUtility != null && saveUtility.gameObject.GetInstanceID() == instanceID)
+			GameObject gameObejct = EditorUtility.InstanceIDToObject(instanceID) as GameObject;
+			if(gameObejct != null)
 			{
-				GUI.Label(drawRect, _saveUtilityIcon);
-			}
-			else
-			{
-				GameObject[] gameObjects = Resources.FindObjectsOfTypeAll(typeof(GameObject)) as GameObject[];
-				GameObject selectedGO = FindGameObjectWithInstanceID(gameObjects, instanceID);
-				
-				if(selectedGO != null)
+				if(gameObejct.GetComponent<TeamUtility.IO.SaveUtility.SaveUtility>() != null)
 				{
-					if(selectedGO.GetComponent<GameObjectSerializer>() != null)
-					{
-						GUI.Label(drawRect, _gameObejctIcon);
-					}
-					else if(selectedGO.GetComponent<UniqueIdentifier>() != null)
-					{
-						GUI.Label(drawRect, _uidIcon);
-					}
+					GUI.Label(drawRect, _saveUtilityIcon);
+				}
+				else if(gameObejct.GetComponent<GameObjectSerializer>() != null)
+				{
+					GUI.Label(drawRect, _gameObejctIcon);
+				}
+				else if(gameObejct.GetComponent<UniqueIdentifier>() != null)
+				{
+					GUI.Label(drawRect, _uidIcon);
 				}
 			}
-		}
-		
-		private static GameObject FindGameObjectWithInstanceID(GameObject[] gameObjects, int instanceID)
-		{
-			foreach(GameObject go in gameObjects)
-			{
-				if(go.hideFlags != HideFlags.NotEditable &&  go.hideFlags != HideFlags.HideAndDontSave &&
-					go.hideFlags != HideFlags.HideInHierarchy && go.GetInstanceID() == instanceID)
-				{
-					return go;
-				}
-			}
-			
-			return null;
 		}
 	}
 }
