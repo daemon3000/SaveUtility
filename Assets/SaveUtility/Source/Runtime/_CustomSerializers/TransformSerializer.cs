@@ -40,6 +40,7 @@ namespace TeamUtility.IO.SaveUtility
 			if(transform.parent == null) 
 			{
 				data.Add("parent", null);
+				data.Add("hadParent", false);
 			}
 			else
 			{
@@ -53,6 +54,7 @@ namespace TeamUtility.IO.SaveUtility
 #endif
 					data.Add("parent", null);
 				}
+				data.Add("hadParent", true);
 			}
 			
 			return data;
@@ -61,14 +63,20 @@ namespace TeamUtility.IO.SaveUtility
 		public void Deserialize(object instance, Dictionary<string, object> data)
 		{
 			Transform transform = instance as Transform;
-			if(data["parent"] != null) {
-				SaveUtility saveUtility = SaveUtility.GetInstance(false);
-				transform.parent = saveUtility.GetStoredComponentByID<Transform>((string)data["parent"]);
+			bool hadParent = (bool)data["hadParent"];
+			
+			if(hadParent)
+			{
+				if(data["parent"] != null) 
+				{
+					SaveUtility saveUtility = SaveUtility.GetInstance(false);
+					transform.parent = saveUtility.GetStoredComponentByID<Transform>((string)data["parent"]);
+				}
 			}
-			else {
+			else
+			{
 				transform.parent = null;
 			}
-			
 			transform.localRotation = Convert.ToQuaternion((Dictionary<string, object>)data["localRotation"]);
 			transform.localPosition = Convert.ToVector3((Dictionary<string, object>)data["localPosition"]);
 			transform.localScale = Convert.ToVector3((Dictionary<string, object>)data["localScale"]);
