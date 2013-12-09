@@ -39,5 +39,12 @@ namespace TeamUtility.IO.SaveUtility
 			BinaryFormatter bf = new BinaryFormatter();
 			bf.Serialize(data, _outputFilename);
 		}
+		
+		public void Serialize(ReadOnlyDictionary<string, object> data, ReadOnlyDictionary<string, object> metadata)
+		{
+			BinaryFormatter bf = new BinaryFormatter();
+			bf.Serialize(data, _outputFilename);
+			bf.Serialize(metadata, Path.ChangeExtension(_outputFilename, "meta"));
+		}
 	}
 }

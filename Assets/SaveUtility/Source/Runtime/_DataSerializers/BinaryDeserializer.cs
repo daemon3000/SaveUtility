@@ -41,5 +41,19 @@ namespace TeamUtility.IO.SaveUtility
 			
 			return new ReadOnlyDictionary<string, object>(data);
 		}
+		
+		public ReadOnlyDictionary<string, object> GetCustomMetadata()
+		{
+			string metafile = Path.ChangeExtension(_inputFilename, "meta");
+			if(File.Exists(metafile))
+			{
+				BinaryFormatter bf = new BinaryFormatter();
+				Dictionary<string, object> data = bf.Deserialize(metafile) as Dictionary<string, object>;
+				
+				return new ReadOnlyDictionary<string, object>(data);
+			}
+			
+			return null;
+		}
 	}
 }

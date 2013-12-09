@@ -30,5 +30,6 @@ namespace TeamUtility.IO.SaveUtility
 	{
 		bool IsDone { get; }
 		void Serialize(ReadOnlyDictionary<string, object> data);
+		void Serialize(ReadOnlyDictionary<string, object> data, ReadOnlyDictionary<string, object> metadata);
 	}
 }

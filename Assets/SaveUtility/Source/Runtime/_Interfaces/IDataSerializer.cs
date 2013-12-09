@@ -29,5 +29,6 @@ namespace TeamUtility.IO.SaveUtility
 	public interface IDataSerializer
 	{
 		void Serialize(ReadOnlyDictionary<string, object> data);
+		void Serialize(ReadOnlyDictionary<string, object> data, ReadOnlyDictionary<string, object> metadata);
 	}
 }

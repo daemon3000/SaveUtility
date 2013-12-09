@@ -29,5 +29,6 @@ namespace TeamUtility.IO.SaveUtility
 	public interface IDataDeserializer
 	{
 		ReadOnlyDictionary<string, object> Deserialize();
+		ReadOnlyDictionary<string, object> GetCustomMetadata();
 	}
 }

@@ -22,6 +22,7 @@
 using UnityEngine;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace TeamUtility.IO.SaveUtility
 {
@@ -35,11 +36,27 @@ namespace TeamUtility.IO.SaveUtility
 			});
 		}
 		
+		public static void Save(IDataSerializer serializer, Dictionary<string, object> customMetadata)
+		{
+			SaveUtility saveUtility = SaveUtility.GetInstance(false);
+			saveUtility.GetSaveTable((data) => {
+				serializer.Serialize(data, new ReadOnlyDictionary<string, object>(customMetadata));
+			});
+		}
+		
 		public static void SaveAsync(IAsyncDataSerializer serializer)
 		{
 			SaveUtility saveUtility = SaveUtility.GetInstance(false);
 			saveUtility.GetSaveTable((data) => {
 				serializer.Serialize(data);
+			});
+		}
+		
+		public static void SaveAsync(IAsyncDataSerializer serializer, Dictionary<string, object> customMetadata)
+		{
+			SaveUtility saveUtility = SaveUtility.GetInstance(false);
+			saveUtility.GetSaveTable((data) => {
+				serializer.Serialize(data, new ReadOnlyDictionary<string, object>(customMetadata));
 			});
 		}
 		

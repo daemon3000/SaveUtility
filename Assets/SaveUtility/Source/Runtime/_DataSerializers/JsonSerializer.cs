@@ -47,5 +47,26 @@ namespace TeamUtility.IO.SaveUtility
 #endif
 			}
 		}
+		
+		public void Serialize(ReadOnlyDictionary<string, object> data, ReadOnlyDictionary<string, object> metadata)
+		{
+			using(StreamWriter sw = File.CreateText(_outputFilename))
+			{
+#if UNITY_EDITOR
+				sw.Write(MiniJson.Serialize(data, true));
+#else
+				sw.Write(MiniJson.Serialize(data, false));
+#endif
+			}
+			
+			using(StreamWriter sw = File.CreateText(Path.ChangeExtension(_outputFilename, "meta")))
+			{
+#if UNITY_EDITOR
+				sw.Write(MiniJson.Serialize(metadata, true));
+#else
+				sw.Write(MiniJson.Serialize(metadata, false));
+#endif
+			}
+		}
 	}
 }

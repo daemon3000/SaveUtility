@@ -79,13 +79,30 @@ namespace TeamUtility.IO.SaveUtility
 			_thread = new Thread(Run);
 			_thread.Start(data);
 		}
-	
-		protected abstract void ThreadFunction(ReadOnlyDictionary<string, object> data);
 		
+		public void Serialize(ReadOnlyDictionary<string, object> data, ReadOnlyDictionary<string, object> metadata)
+		{
+			_thread = new Thread(Run);
+			_thread.Start(new object[] { data, metadata });
+		}
+	
 		private void Run(object data)
 		{
-			ThreadFunction((ReadOnlyDictionary<string, object>)data);
-			IsDone = true;
+			if(data is Array)
+			{
+				object[] array = (object[])data;
+				
+				ThreadFunction((ReadOnlyDictionary<string, object>)array[0], (ReadOnlyDictionary<string, object>)array[1]);
+				IsDone = true;
+			}
+			else
+			{
+				ThreadFunction((ReadOnlyDictionary<string, object>)data);
+				IsDone = true;
+			}
 		}
+		
+		protected abstract void ThreadFunction(ReadOnlyDictionary<string, object> data);
+		protected abstract void ThreadFunction(ReadOnlyDictionary<string, object> data, ReadOnlyDictionary<string, object> metadata);
 	}
 }
