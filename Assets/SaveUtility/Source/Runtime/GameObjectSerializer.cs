@@ -101,7 +101,10 @@ namespace TeamUtility.IO.SaveUtility
 				return;
 			}
 #endif
-			_saveUtility.RemoveGameObjectSerializer(this);
+			if(_saveUtility != null) 
+			{
+				_saveUtility.RemoveGameObjectSerializer(this);
+			}
 		}
 		
 		public Dictionary<string, object> Serialize()

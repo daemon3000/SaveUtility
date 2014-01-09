@@ -373,6 +373,14 @@ namespace TeamUtility.IO.SaveUtility
 		
 		public static GameObject InstantiateSavable(GameObject template, Vector3 position, Quaternion rotation)
 		{
+			if(template == null)
+				throw new ArgumentNullException("template");
+			
+			if(_instance == null || template.GetComponent<GameObjectSerializer>() == null)
+			{
+				return GameObject.Instantiate(template, position, rotation) as GameObject;
+			}
+			
 			GameObject instance = GameObject.Instantiate(template, position, rotation) as GameObject;
 			GameObject serializerGO = new GameObject("RuntimeInstanceSerializer");
 			RuntimeInstanceSerializer serializer = serializerGO.AddComponent<RuntimeInstanceSerializer>();
