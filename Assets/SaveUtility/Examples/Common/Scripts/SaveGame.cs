@@ -42,10 +42,14 @@ public sealed class SaveGame : MonoBehaviour
 	
 	private void OnGUI()
 	{
-		GUILayout.Space(30.0f);
+		GUI.color = Color.red;
+		Rect area = new Rect(0.0f, Screen.height - 80.0f, Screen.width, 80.0f);
+		GUILayout.BeginArea(area);
 		GUILayout.Label("Press F5 to save the game");
 		GUILayout.Label("Press F9 to load the game");
 		GUILayout.Label("Save File: " + _saveFile);
+		GUILayout.EndArea();
+		GUI.color = Color.white;
 	}
 	
 	private void Update()

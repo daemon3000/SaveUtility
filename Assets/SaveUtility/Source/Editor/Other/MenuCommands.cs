@@ -129,5 +129,12 @@ namespace TeamUtility.Editor.IO.SaveUtility
 				}
 			}
 		}
+		
+		[MenuItem("Team Utility/Save Utility/About", false, 120)]
+		private static void About()
+		{
+			string about = "SaveUtility v1.0, MIT licensed\nCopyright 2013-2014 Geambasu Alexandru Cristian\nhttps://bitbucket.org/daemon3000/saveutility-for-unity3d";
+			EditorUtility.DisplayDialog("About", about, "OK");
+		}
 	}
 }

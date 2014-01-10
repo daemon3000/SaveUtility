@@ -47,6 +47,7 @@ namespace TeamUtility.IO.SaveUtility
 		{
 			if(_canShowOverlay)
 			{
+				GUI.depth = -100;
 				GUI.DrawTexture(new Rect(0.0f, 0.0f, Screen.width, Screen.height), 
 								_overlayTexture, ScaleMode.StretchToFill);
 			}
