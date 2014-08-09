@@ -1,9 +1,9 @@
-﻿#region [Copyright (c) 2013 Cristian Alexandru Geambasu]
+﻿#region [Copyright (c) 2013-2014 Cristian Alexandru Geambasu]
 //	Distributed under the terms of an MIT-style license:
 //
 //	The MIT License
 //
-//	Copyright (c) 2013 Cristian Alexandru Geambasu
+//	Copyright (c) 2013-2014 Cristian Alexandru Geambasu
 //
 //	Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
 //	and associated documentation files (the "Software"), to deal in the Software without restriction, 
@@ -190,7 +190,7 @@ namespace TeamUtility.Editor.IO.SaveUtility
 			{
 				foreach(Transform child in gameObject.transform)
 				{
-					AddUniqueIdentifier(child.gameObject, recursive);
+					AddUniqueIdentifier(child.gameObject, false);
 				}
 			}
 		}
@@ -215,7 +215,7 @@ namespace TeamUtility.Editor.IO.SaveUtility
 			{
 				foreach(Transform child in gameObject.transform)
 				{
-					AddGameObjectSerializer(child.gameObject, recursive);
+					AddGameObjectSerializer(child.gameObject, false);
 				}
 			}
 		}
@@ -232,13 +232,13 @@ namespace TeamUtility.Editor.IO.SaveUtility
 			{
 				foreach(Transform child in gameObject.transform)
 				{
-					Remove(child.gameObject, recursive);
+					Remove(child.gameObject, false);
 				}
 			}
 		}
 		
 		[MenuItem("Team Utility/Save Utility/Tools/Save Wizard", false, 90)]
-		public static void Init()
+		private static void Open()
 		{
 			EditorWindow.GetWindow<SaveWizard>("Save Wizard");
 		}

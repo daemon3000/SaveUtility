@@ -1,9 +1,9 @@
-﻿#region [Copyright (c) 2013 Cristian Alexandru Geambasu]
+﻿#region [Copyright (c) 2013-2014 Cristian Alexandru Geambasu]
 //	Distributed under the terms of an MIT-style license:
 //
 //	The MIT License
 //
-//	Copyright (c) 2013 Cristian Alexandru Geambasu
+//	Copyright (c) 2013-2014 Cristian Alexandru Geambasu
 //
 //	Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
 //	and associated documentation files (the "Software"), to deal in the Software without restriction, 
@@ -45,7 +45,8 @@ namespace TeamUtility.IO.SaveUtility
 			}
 		}
 		#endregion
-		
+
+		public const string VERSION = "1.6.0.0";
 		private const int MAX_FRAMES_TO_GET_DATA = 5;
 		
 		[SerializeField] 
@@ -235,6 +236,14 @@ namespace TeamUtility.IO.SaveUtility
 		{
 			SetGameObjectSerializers(saveTable);
 			SetRuntimeInstanceSerializers(saveTable);
+
+			foreach(KeyValuePair<string, GameObject> entry in _referenceTable)
+			{
+				if(entry.Value != null)
+				{
+					entry.Value.SendMessage("OnDeserialized", SendMessageOptions.DontRequireReceiver);
+				}
+			}
 		}
 		
 		private void SetGameObjectSerializers(ReadOnlyDictionary<string, object> saveTable)
@@ -327,6 +336,14 @@ namespace TeamUtility.IO.SaveUtility
 				yield return null;
 			}
 			saveTable.Add("runtime_objects", runtimeData);
+
+			foreach(KeyValuePair<string, GameObject> entry in _referenceTable)
+			{
+				if(entry.Value != null)
+				{
+					entry.Value.SendMessage("OnSerialized", SendMessageOptions.DontRequireReceiver);
+				}
+			}
 			
 			completedCallback(new ReadOnlyDictionary<string, object>(saveTable));
 		}

@@ -1,9 +1,9 @@
-﻿#region [Copyright (c) 2013 Cristian Alexandru Geambasu]
+﻿#region [Copyright (c) 2013-2014 Cristian Alexandru Geambasu]
 //	Distributed under the terms of an MIT-style license:
 //
 //	The MIT License
 //
-//	Copyright (c) 2013 Cristian Alexandru Geambasu
+//	Copyright (c) 2013-2014 Cristian Alexandru Geambasu
 //
 //	Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
 //	and associated documentation files (the "Software"), to deal in the Software without restriction, 
@@ -33,9 +33,6 @@ namespace TeamUtility.Editor.IO.SaveUtility
 		private TeamUtility.IO.SaveUtility.SaveUtility _saveUtility;
 		private SerializedProperty _requiredAssets;
 		private SerializedProperty _serializers;
-		private GUIContent _removeButtonInfo = new GUIContent("R", "Remove");
-		private GUIContent _upButtonInfo = new GUIContent("U", "Move Up");
-		private GUIContent _downButtonInfo = new GUIContent("D", "Move Down");
 		private int _toolbarSelection = 0;
 		private string[] _toolbarOptions = new string[] { "Tracked Objects", "Required Assets" };
 		
@@ -73,22 +70,32 @@ namespace TeamUtility.Editor.IO.SaveUtility
 				GameObjectSerializer serializer = prop.objectReferenceValue as GameObjectSerializer;
 				if(serializer == null) {
 					EditorGUILayout.LabelField("Object reference is not a GameObjectSerializer");
+					GUI.color = Color.red;
+					if(GUILayout.Button("Remove"))
+					{
+						_serializers.DeleteArrayElementAtIndex(i);
+					}
+					GUI.color = Color.white;
 					continue;
 				}
 				
 				EditorGUILayout.BeginHorizontal();
-				EditorGUILayout.LabelField(string.Format("{0} - {1}", serializer.name, serializer.ID), GUILayout.Width(Screen.width - 130.0f));
-				if(GUILayout.Button("Select", GUILayout.Width(60.0f)))
+				EditorGUILayout.LabelField(string.Format("{0} - {1}", serializer.name, serializer.ID));
+				if(GUILayout.Button("Select"))
 				{
 					Selection.activeGameObject = serializer.gameObject;
 				}
-				if(GUILayout.Button(_upButtonInfo, GUILayout.Width(22.5f)) && i > 0)
+				if(GUILayout.Button("Up") && i > 0)
 				{
 					_serializers.MoveArrayElement(i, i - 1);
 				}
-				if(GUILayout.Button(_downButtonInfo, GUILayout.Width(22.5f)) && i < _serializers.arraySize - 1)
+				if(GUILayout.Button("Down") && i < _serializers.arraySize - 1)
 				{
 					_serializers.MoveArrayElement(i, i + 1);
+				}
+				if(GUILayout.Button("Top") && i > 0)
+				{
+					_serializers.MoveArrayElement(i, 0);
 				}
 				EditorGUILayout.EndHorizontal();
 			}
@@ -103,7 +110,7 @@ namespace TeamUtility.Editor.IO.SaveUtility
 				
 				EditorGUILayout.BeginHorizontal();
 				EditorGUILayout.ObjectField(asset.objectReferenceValue, typeof(UnityEngine.Object), false);
-				if(GUILayout.Button(_removeButtonInfo, GUILayout.Width(24.0f)))
+				if(GUILayout.Button("Remove", GUILayout.Width(24.0f)))
 				{
 					_requiredAssets.DeleteArrayElementAtIndex(i);
 					i--;

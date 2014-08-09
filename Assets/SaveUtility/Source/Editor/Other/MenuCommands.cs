@@ -1,9 +1,9 @@
-﻿#region [Copyright (c) 2013 Cristian Alexandru Geambasu]
+﻿#region [Copyright (c) 2013-2014 Cristian Alexandru Geambasu]
 //	Distributed under the terms of an MIT-style license:
 //
 //	The MIT License
 //
-//	Copyright (c) 2013 Cristian Alexandru Geambasu
+//	Copyright (c) 2013-2014 Cristian Alexandru Geambasu
 //
 //	Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
 //	and associated documentation files (the "Software"), to deal in the Software without restriction, 
@@ -133,7 +133,7 @@ namespace TeamUtility.Editor.IO.SaveUtility
 		[MenuItem("Team Utility/Save Utility/About", false, 120)]
 		private static void About()
 		{
-			string about = "SaveUtility v1.0, MIT licensed\nCopyright 2013-2014 Geambasu Alexandru Cristian\nhttps://bitbucket.org/daemon3000/saveutility-for-unity3d";
+			string about = string.Format("SaveUtility v{0}, MIT licensed\nCopyright \u00A9 2013-2014 Cristian Alexandru Geambasu\nhttps://bitbucket.org/daemon3000/saveutility-for-unity3d", TeamUtility.IO.SaveUtility.SaveUtility.VERSION);
 			EditorUtility.DisplayDialog("About", about, "OK");
 		}
 	}

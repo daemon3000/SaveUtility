@@ -1,9 +1,9 @@
-#region [Copyright (c) 2013 Cristian Alexandru Geambasu]
+#region [Copyright (c) 2013-2014 Cristian Alexandru Geambasu]
 //	Distributed under the terms of an MIT-style license:
 //
 //	The MIT License
 //
-//	Copyright (c) 2013 Cristian Alexandru Geambasu
+//	Copyright (c) 2013-2014 Cristian Alexandru Geambasu
 //
 //	Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
 //	and associated documentation files (the "Software"), to deal in the Software without restriction, 
@@ -78,11 +78,7 @@ namespace TeamUtility.IO.SaveUtility
 		protected override void OnEnable()
 		{
 			base.OnEnable();
-			
-#if UNITY_EDITOR
-			if(!UnityEditor.EditorApplication.isPlaying)
-				return;
-#endif
+
 			if(_serializableComponents == null) {
 				_serializableComponents = new List<ComponentStatusPair>();
 			}
@@ -140,6 +136,7 @@ namespace TeamUtility.IO.SaveUtility
 					data.Add(componentType.FullName, serializer.Serialize(component));
 				}
 			}
+			gameObject.SendMessage("OnSerialized", SendMessageOptions.DontRequireReceiver);
 			
 			return data;
 		}
@@ -175,12 +172,19 @@ namespace TeamUtility.IO.SaveUtility
 			gameObject.name = data["name"].ToString();
 			gameObject.tag = data["tag"].ToString();
 			gameObject.layer = System.Convert.ToInt32(data["layer"]);
-			gameObject.SendMessage("OnDeserialized", SendMessageOptions.DontRequireReceiver);
+			if(gameObject.activeSelf)
+			{
+				gameObject.SendMessage("OnDeserialized", SendMessageOptions.DontRequireReceiver);
+			}
 			
 			bool activeSelf = (bool)data["activeSelf"];
 			if(activeSelf != gameObject.activeSelf) 
 			{
 				gameObject.SetActive(activeSelf);
+				if(gameObject.activeSelf)
+				{
+					gameObject.SendMessage("OnDeserialized", SendMessageOptions.DontRequireReceiver);
+				}
 			}
 		}
 		
