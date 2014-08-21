@@ -50,7 +50,7 @@ namespace TeamUtility.IO.SaveUtility
 		private static Dictionary<Type, IComponentSerializer> _customSerializerTable;
 		private static Dictionary<Type, ITypeConverter> _typeConverters;
 
-		[SerializeField] private List<ComponentStatusPair> _serializableComponents;
+		[SerializeField] private List<ComponentStatusPair> _serializableComponents = new List<ComponentStatusPair>();
 		private SaveUtility _saveUtility;
 		
 		private void Awake()
