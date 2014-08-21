@@ -49,8 +49,7 @@ namespace TeamUtility.IO.SaveUtility
 		
 		private static Dictionary<Type, IComponentSerializer> _customSerializerTable;
 		private static Dictionary<Type, ITypeConverter> _typeConverters;
-		
-		[SerializeField] private bool _storeAllComponents = true;
+
 		[SerializeField] private List<ComponentStatusPair> _serializableComponents;
 		private SaveUtility _saveUtility;
 		
@@ -113,7 +112,7 @@ namespace TeamUtility.IO.SaveUtility
 			
 			foreach(ComponentStatusPair pair in _serializableComponents)
 			{
-				if(!_storeAllComponents && !pair.serialize)
+				if(!pair.serialize)
 					continue;
 				
 				Component component = pair.component;

@@ -34,12 +34,12 @@ namespace TeamUtility.Editor.IO.SaveUtility
 	public sealed class GameObjectSerializerEditor : UnityEditor.Editor
 	{
 		private SerializedProperty _id;
-		private SerializedProperty _storeAllComponents;
+		private SerializedProperty _serializableComponents;
 		
 		private void OnEnable()
 		{
 			_id = serializedObject.FindProperty("_id");
-			_storeAllComponents = serializedObject.FindProperty("_storeAllComponents");
+			_serializableComponents = serializedObject.FindProperty("_serializableComponents");
 		}
 		
 		public override void OnInspectorGUI()
@@ -47,7 +47,6 @@ namespace TeamUtility.Editor.IO.SaveUtility
 			serializedObject.Update();
 			EditorGUILayout.Space();
 			EditorGUILayout.TextField("ID", _id.stringValue);
-			EditorGUILayout.PropertyField(_storeAllComponents);
 			DisplayComponentList();
 			serializedObject.ApplyModifiedProperties();
 		}
@@ -79,25 +78,29 @@ namespace TeamUtility.Editor.IO.SaveUtility
 					}
 				}
 			}
-			
-			if(!_storeAllComponents.boolValue)
+
+			_serializableComponents.isExpanded = EditorGUILayout.Foldout(_serializableComponents.isExpanded, "Serializable Components");
+			if(_serializableComponents.isExpanded)
 			{
+				EditorGUI.indentLevel++;
 				foreach(var pair in currentComponents)
 				{
-					string label = string.Format("    > {0}", pair.component.GetType().Name);
-					pair.serialize = EditorGUILayout.Toggle(label, pair.serialize);
+					pair.serialize = EditorGUILayout.Toggle(pair.component.GetType().Name, pair.serialize);
 				}
+				EditorGUI.indentLevel--;
 			}
 
 			GUILayout.Space(10);
 			EditorGUILayout.BeginHorizontal();
-			if(GUILayout.Button("Select All"))
+			if(GUILayout.Button("Select All", GUILayout.Height(22)))
 			{
-				_storeAllComponents.boolValue = true;
+				foreach(var pair in currentComponents)
+				{
+					pair.serialize = true;
+				}
 			}
-			if(GUILayout.Button("Deselect All"))
+			if(GUILayout.Button("Deselect All", GUILayout.Height(22)))
 			{
-				_storeAllComponents.boolValue = false;
 				foreach(var pair in currentComponents)
 				{
 					pair.serialize = false;

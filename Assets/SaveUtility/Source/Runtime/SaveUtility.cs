@@ -48,6 +48,9 @@ namespace TeamUtility.IO.SaveUtility
 
 		public const string VERSION = "1.6.0.0";
 		private const int MAX_FRAMES_TO_GET_DATA = 5;
+
+		public event Action Saved;
+		public event Action Loaded;
 		
 		[SerializeField] 
 		private List<GameObjectSerializer> _serializers = new List<GameObjectSerializer>();
@@ -97,7 +100,8 @@ namespace TeamUtility.IO.SaveUtility
 			UniqueIdentifier[] identifiers = UnityEngine.Object.FindObjectsOfType(typeof(UniqueIdentifier)) as UniqueIdentifier[];
 			foreach(UniqueIdentifier uid in identifiers)
 			{
-				_referenceTable.Add(uid.ID, uid.gameObject);
+				if(!_referenceTable.ContainsKey(uid.ID))
+					_referenceTable.Add(uid.ID, uid.gameObject);
 			}
 		}
 		
@@ -230,19 +234,15 @@ namespace TeamUtility.IO.SaveUtility
 			return true;
 		}
 #endif
-		
-		#region [Set/Get Save Table]
+
 		public void SetSaveTable(ReadOnlyDictionary<string, object> saveTable)
 		{
 			SetGameObjectSerializers(saveTable);
 			SetRuntimeInstanceSerializers(saveTable);
 
-			foreach(KeyValuePair<string, GameObject> entry in _referenceTable)
+			if(Loaded != null)
 			{
-				if(entry.Value != null)
-				{
-					entry.Value.SendMessage("OnDeserialized", SendMessageOptions.DontRequireReceiver);
-				}
+				Loaded();
 			}
 		}
 		
@@ -337,17 +337,13 @@ namespace TeamUtility.IO.SaveUtility
 			}
 			saveTable.Add("runtime_objects", runtimeData);
 
-			foreach(KeyValuePair<string, GameObject> entry in _referenceTable)
+			if(Saved != null)
 			{
-				if(entry.Value != null)
-				{
-					entry.Value.SendMessage("OnSerialized", SendMessageOptions.DontRequireReceiver);
-				}
+				Saved();
 			}
 			
 			completedCallback(new ReadOnlyDictionary<string, object>(saveTable));
 		}
-		#endregion
 		
 		#region [Static Methods]
 		public static SaveUtility GetInstance(bool createIfNull)
