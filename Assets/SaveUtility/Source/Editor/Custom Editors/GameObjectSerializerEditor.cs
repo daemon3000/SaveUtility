@@ -35,18 +35,24 @@ namespace TeamUtility.Editor.IO.SaveUtility
 	{
 		private SerializedProperty _id;
 		private SerializedProperty _serializableComponents;
+		private bool _hasPrefab = false;
 		
 		private void OnEnable()
 		{
 			_id = serializedObject.FindProperty("_id");
 			_serializableComponents = serializedObject.FindProperty("_serializableComponents");
+
+			var targetRoot = PrefabUtility.FindRootGameObjectWithSameParentPrefab(((GameObjectSerializer)target).gameObject);
+			_hasPrefab = PrefabUtility.GetPrefabParent(targetRoot) != null;
 		}
 		
 		public override void OnInspectorGUI()
 		{
 			serializedObject.Update();
 			EditorGUILayout.Space();
-			EditorGUILayout.TextField("ID", _id.stringValue);
+			GUI.enabled = false;
+			EditorGUILayout.PropertyField(_id);
+			GUI.enabled = true;
 			DisplayComponentList();
 			serializedObject.ApplyModifiedProperties();
 		}
@@ -92,21 +98,53 @@ namespace TeamUtility.Editor.IO.SaveUtility
 
 			GUILayout.Space(10);
 			EditorGUILayout.BeginHorizontal();
-			if(GUILayout.Button("Select All", GUILayout.Height(22)))
+			if(GUILayout.Button("Select\nAll"))
 			{
 				foreach(var pair in currentComponents)
 				{
 					pair.serialize = true;
 				}
 			}
-			if(GUILayout.Button("Deselect All", GUILayout.Height(22)))
+			if(GUILayout.Button("Deselect\nAll"))
 			{
 				foreach(var pair in currentComponents)
 				{
 					pair.serialize = false;
 				}
 			}
+			if(GUILayout.Button("Copy\nID"))
+			{
+				EditorGUIUtility.systemCopyBuffer = target.ID;
+			}
+			GUI.enabled = _hasPrefab && !EditorApplication.isPlaying && !EditorUtility.IsPersistent(target);
+			if(GUILayout.Button("Apply\nChanges"))
+			{
+				ApplyChangesToPrefab();
+			}
+			GUI.enabled = false;
 			EditorGUILayout.EndHorizontal();
+		}
+
+		private void ApplyChangesToPrefab()
+		{
+			var targetRoot = PrefabUtility.FindRootGameObjectWithSameParentPrefab(((GameObjectSerializer)target).gameObject);
+
+			GameObjectSerializer[] serializers = targetRoot.GetComponentsInChildren<GameObjectSerializer>();
+			for(int i = 0; i < serializers.Length; i++)
+			{
+				serializers[i].ChacheID();
+			}
+
+			GameObject prefab = PrefabUtility.GetPrefabParent(targetRoot) as GameObject;
+			prefab = PrefabUtility.ReplacePrefab(targetRoot, prefab, ReplacePrefabOptions.ConnectToPrefab);
+
+			GameObjectSerializer[] prefabSerializers = prefab.GetComponentsInChildren<GameObjectSerializer>(true);
+			for(int i = 0; i < prefabSerializers.Length; i++)
+			{
+				prefabSerializers[i].ClearID();
+			}
+
+			AssetDatabase.SaveAssets();
 		}
 		
 		private bool Contains(List<GameObjectSerializer.ComponentStatusPair> list, Component c)

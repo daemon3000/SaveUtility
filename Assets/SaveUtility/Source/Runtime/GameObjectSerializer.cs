@@ -51,7 +51,11 @@ namespace TeamUtility.IO.SaveUtility
 		private static Dictionary<Type, ITypeConverter> _typeConverters;
 
 		[SerializeField] private List<ComponentStatusPair> _serializableComponents = new List<ComponentStatusPair>();
-		private SaveUtility _saveUtility;
+		private SaveUtility _saveUtility = null;
+#if UNITY_EDITOR
+		private string _chachedID = null;
+		private bool _isIDChached = false;
+#endif
 		
 		private void Awake()
 		{
@@ -61,7 +65,33 @@ namespace TeamUtility.IO.SaveUtility
 			if(!UnityEditor.EditorApplication.isPlaying)
 			{
 				SaveUtility saveUtility = SaveUtility.GetInstance(true);
-				saveUtility.AddGameObjectSerializer(this);
+				GameObjectSerializer result = saveUtility.GetGameObjectSerializerByID(_id);
+				if(result == null)
+				{
+					var prefab = UnityEditor.PrefabUtility.GetPrefabParent(gameObject) as GameObject;
+					if(prefab != null)
+					{
+						GameObjectSerializer serializer = prefab.GetComponent<GameObjectSerializer>();
+						if(serializer != null && serializer.ID == _id)
+						{
+							_id = GetUniqueID();
+#if SAVEUTILITY_DEVBUILD
+							Debug.Log("GameObjectSerializer: " + GetInstanceID() + " has the same ID as the prefab. " + "New ID: " + _id);
+#endif
+						}
+					}
+					saveUtility.AddGameObjectSerializer(this);
+				}
+				else if(result != this)
+				{
+					_id = GetUniqueID();
+#if SAVEUTILITY_DEVBUILD
+					Debug.Log("GameObjectSerializer: " + GetInstanceID() + " has a duplicate ID. " + "New ID: " + _id);
+#endif
+
+					saveUtility.AddGameObjectSerializer(this);
+				}
+
 				return;
 			}
 #endif
@@ -73,10 +103,29 @@ namespace TeamUtility.IO.SaveUtility
 			}
 			_saveUtility = SaveUtility.GetInstance(false);
 		}
-		
+
 		protected override void OnEnable()
 		{
-			base.OnEnable();
+#if UNITY_EDITOR
+			if(!UnityEditor.EditorApplication.isPlaying)
+			{
+				if(string.IsNullOrEmpty(_id)) 
+				{
+					if(_isIDChached)
+					{
+						_id = _chachedID;
+						_isIDChached = false;
+					}
+					else
+					{
+						_id = GetUniqueID();
+#if SAVEUTILITY_DEVBUILD
+						Debug.Log("No ID on GameObjectSerializer: " + GetInstanceID() + ". New ID: " + _id);
+#endif
+					}
+				}
+			}
+#endif
 
 			if(_serializableComponents == null) {
 				_serializableComponents = new List<ComponentStatusPair>();
@@ -512,6 +561,15 @@ namespace TeamUtility.IO.SaveUtility
 		public List<ComponentStatusPair> GetComponentList()
 		{
 			return _serializableComponents;
+		}
+
+		public void ChacheID()
+		{
+			if(!_isIDChached)
+			{
+				_chachedID = _id;
+				_isIDChached = true;
+			}
 		}
 #endif
 		

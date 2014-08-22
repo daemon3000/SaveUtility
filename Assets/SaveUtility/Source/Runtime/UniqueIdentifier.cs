@@ -28,7 +28,7 @@ namespace TeamUtility.IO.SaveUtility
 	[ExecuteInEditMode]
 	public class UniqueIdentifier : MonoBehaviour
 	{
-		[SerializeField] private string _id;
+		[SerializeField] protected string _id;
 		
 		public string ID 
 		{ 
@@ -45,6 +45,11 @@ namespace TeamUtility.IO.SaveUtility
 				}
 			}
 #endif
+		}
+
+		public void ClearID()
+		{
+			_id = null;
 		}
 		
 		public static string GetUniqueID()

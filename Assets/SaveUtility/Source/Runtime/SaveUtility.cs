@@ -46,7 +46,7 @@ namespace TeamUtility.IO.SaveUtility
 		}
 		#endregion
 
-		public const string VERSION = "1.6.0.0";
+		public const string VERSION = "1.7.0.0";
 		private const int MAX_FRAMES_TO_GET_DATA = 5;
 
 		public event Action Saved;
@@ -56,7 +56,7 @@ namespace TeamUtility.IO.SaveUtility
 		private List<GameObjectSerializer> _serializers = new List<GameObjectSerializer>();
 		[SerializeField]
 		private List<AssetIDPair> _requiredAssets = new List<AssetIDPair>();
-		
+
 		private Dictionary<string, GameObject> _referenceTable;
 		private Dictionary<string, AssetIDPair> _assetTable;
 		private List<RuntimeInstanceSerializer> _runtimeSerializers;
@@ -92,7 +92,7 @@ namespace TeamUtility.IO.SaveUtility
 			BuildReferenceTable();
 			BuildAssetTable();
 		}
-		
+
 		private void BuildReferenceTable()
 		{
 			_referenceTable = new Dictionary<string, GameObject>();
@@ -114,12 +114,10 @@ namespace TeamUtility.IO.SaveUtility
 				_assetTable.Add(pair.id, pair);
 			}
 		}
-		
+
 		public void AddGameObjectSerializer(GameObjectSerializer serializer)
 		{
-			if(!_serializers.Contains(serializer)) {
-				_serializers.Add(serializer);
-			}
+			_serializers.Add(serializer);
 		}
 		
 		public bool RemoveGameObjectSerializer(GameObjectSerializer serializer)
@@ -131,7 +129,18 @@ namespace TeamUtility.IO.SaveUtility
 		{
 			return _serializers.Count;
 		}
-		
+
+		public GameObjectSerializer GetGameObjectSerializerByID(string id)
+		{
+			for(int i = 0; i < _serializers.Count; i++)
+			{
+				if(_serializers[i].ID == id)
+					return _serializers[i];
+			}
+			
+			return null;
+		}
+
 		public GameObject GetStoredGameObjectByID(string id)
 		{
 			if(string.IsNullOrEmpty(id)) {
@@ -317,25 +326,15 @@ namespace TeamUtility.IO.SaveUtility
 				yield return null;
 			}
 			
-			count = 0;
-			while(count < _runtimeSerializers.Count)
+			for(int i = 0; i < _runtimeSerializers.Count; i++)
 			{
-				for(int i = 0; i < batchSize && count < _runtimeSerializers.Count; i++, count++)
+				if(_runtimeSerializers[i] != null)
 				{
-					if(_runtimeSerializers[count] != null)
-					{
-						runtimeData.Add(_runtimeSerializers[count].Serialize());
-					}
-					else
-					{
-						_runtimeSerializers.RemoveAt(count);
-						count--;
-						i--;
-					}
+					runtimeData.Add(_runtimeSerializers[i].Serialize());
 				}
-				yield return null;
 			}
 			saveTable.Add("runtime_objects", runtimeData);
+			yield return null;
 
 			if(Saved != null)
 			{
