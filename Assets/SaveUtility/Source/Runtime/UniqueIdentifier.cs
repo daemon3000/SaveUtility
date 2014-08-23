@@ -29,7 +29,11 @@ namespace TeamUtility.IO.SaveUtility
 	public class UniqueIdentifier : MonoBehaviour
 	{
 		[SerializeField] protected string _id;
-		
+#if UNITY_EDITOR
+		private string _chachedID = null;
+		private bool _isIDChached = false;
+#endif
+
 		public string ID 
 		{ 
 			get { return _id; } 
@@ -40,17 +44,45 @@ namespace TeamUtility.IO.SaveUtility
 #if UNITY_EDITOR
 			if(!UnityEditor.EditorApplication.isPlaying)
 			{
-				if(string.IsNullOrEmpty(_id)) {
-					_id = GetUniqueID();
+				if(string.IsNullOrEmpty(_id)) 
+				{
+					if(_isIDChached)
+					{
+						_id = _chachedID;
+						_isIDChached = false;
+					}
+					else
+					{
+						_id = GetUniqueID();
+#if SAVEUTILITY_DEVBUILD
+						Debug.Log(string.Format("No ID on {0}: {1}. New ID: {2}", GetType().Name, GetInstanceID(), _id));
+#endif
+					}
 				}
 			}
 #endif
 		}
 
+#if UNITY_EDITOR
 		public void ClearID()
 		{
 			_id = null;
 		}
+
+		public void ChacheID()
+		{
+			if(!_isIDChached)
+			{
+				_chachedID = _id;
+				_isIDChached = true;
+			}
+		}
+
+		public void GenerateNewID()
+		{
+			_id = GetUniqueID();
+		}
+#endif
 		
 		public static string GetUniqueID()
 		{

@@ -31,19 +31,14 @@ using TeamUtility.IO.SaveUtility;
 namespace TeamUtility.Editor.IO.SaveUtility
 {
 	[CustomEditor(typeof(GameObjectSerializer))]
-	public sealed class GameObjectSerializerEditor : UnityEditor.Editor
+	public sealed class GameObjectSerializerEditor : UniqueIdentifierEditor
 	{
-		private SerializedProperty _id;
 		private SerializedProperty _serializableComponents;
-		private bool _hasPrefab = false;
 		
-		private void OnEnable()
+		protected override void OnEnable()
 		{
-			_id = serializedObject.FindProperty("_id");
+			base.OnEnable();
 			_serializableComponents = serializedObject.FindProperty("_serializableComponents");
-
-			var targetRoot = PrefabUtility.FindRootGameObjectWithSameParentPrefab(((GameObjectSerializer)target).gameObject);
-			_hasPrefab = PrefabUtility.GetPrefabParent(targetRoot) != null;
 		}
 		
 		public override void OnInspectorGUI()
@@ -98,26 +93,32 @@ namespace TeamUtility.Editor.IO.SaveUtility
 
 			GUILayout.Space(10);
 			EditorGUILayout.BeginHorizontal();
-			if(GUILayout.Button("Select\nAll"))
+			if(GUILayout.Button("Select\nAll", GUILayout.Height(32)))
 			{
 				foreach(var pair in currentComponents)
 				{
 					pair.serialize = true;
 				}
 			}
-			if(GUILayout.Button("Deselect\nAll"))
+			if(GUILayout.Button("Deselect\nAll", GUILayout.Height(32)))
 			{
 				foreach(var pair in currentComponents)
 				{
 					pair.serialize = false;
 				}
 			}
-			if(GUILayout.Button("Copy\nID"))
+			GUI.enabled = !EditorUtility.IsPersistent(target);
+			if(GUILayout.Button("Copy\nID", GUILayout.Height(32)))
 			{
 				EditorGUIUtility.systemCopyBuffer = target.ID;
 			}
+			GUI.enabled = !EditorApplication.isPlaying && !EditorUtility.IsPersistent(target);
+			if(GUILayout.Button("Duplicate", GUILayout.Height(32)))
+			{
+				Duplicate();
+			}
 			GUI.enabled = _hasPrefab && !EditorApplication.isPlaying && !EditorUtility.IsPersistent(target);
-			if(GUILayout.Button("Apply\nChanges"))
+			if(GUILayout.Button("Apply\nChanges", GUILayout.Height(32)))
 			{
 				ApplyChangesToPrefab();
 			}
@@ -125,28 +126,6 @@ namespace TeamUtility.Editor.IO.SaveUtility
 			EditorGUILayout.EndHorizontal();
 		}
 
-		private void ApplyChangesToPrefab()
-		{
-			var targetRoot = PrefabUtility.FindRootGameObjectWithSameParentPrefab(((GameObjectSerializer)target).gameObject);
-
-			GameObjectSerializer[] serializers = targetRoot.GetComponentsInChildren<GameObjectSerializer>();
-			for(int i = 0; i < serializers.Length; i++)
-			{
-				serializers[i].ChacheID();
-			}
-
-			GameObject prefab = PrefabUtility.GetPrefabParent(targetRoot) as GameObject;
-			prefab = PrefabUtility.ReplacePrefab(targetRoot, prefab, ReplacePrefabOptions.ConnectToPrefab);
-
-			GameObjectSerializer[] prefabSerializers = prefab.GetComponentsInChildren<GameObjectSerializer>(true);
-			for(int i = 0; i < prefabSerializers.Length; i++)
-			{
-				prefabSerializers[i].ClearID();
-			}
-
-			AssetDatabase.SaveAssets();
-		}
-		
 		private bool Contains(List<GameObjectSerializer.ComponentStatusPair> list, Component c)
 		{
 			for(int i = 0; i < list.Count; i++)

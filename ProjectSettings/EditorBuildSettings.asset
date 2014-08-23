@@ -5,7 +5,7 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/SaveUtility/Examples/01 - Save and Load/Scenes/example_1.unity
   - enabled: 1
-    path: Assets/Tests/Scenes/scene02.unity
+    path: Assets/Tests/RuntimeSavableTest/scene.unity

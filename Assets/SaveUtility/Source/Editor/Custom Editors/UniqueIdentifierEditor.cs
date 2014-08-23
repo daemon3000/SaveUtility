@@ -22,19 +22,130 @@
 using UnityEngine;
 using UnityEditor;
 using System;
-using System.Collections;
+using System.Collections.Generic;
 using TeamUtility.IO.SaveUtility;
 
 namespace TeamUtility.Editor.IO.SaveUtility
 {
 	[CustomEditor(typeof(UniqueIdentifier))]
-	public sealed class UniqueIdentifierEditor : UnityEditor.Editor
+	public class UniqueIdentifierEditor : UnityEditor.Editor
 	{
+		protected SerializedProperty _id;
+		protected bool _hasPrefab = false;
+
+		protected virtual void OnEnable()
+		{
+			_id = serializedObject.FindProperty("_id");
+
+			var targetRoot = PrefabUtility.FindRootGameObjectWithSameParentPrefab(((UniqueIdentifier)target).gameObject);
+			_hasPrefab = PrefabUtility.GetPrefabParent(targetRoot) != null;
+		}
+
 		public override void OnInspectorGUI()
 		{
-			UniqueIdentifier target = this.target as UniqueIdentifier;
+			serializedObject.Update();
 			EditorGUILayout.Space();
-			EditorGUILayout.TextField("ID", target.ID);
+			GUI.enabled = false;
+			EditorGUILayout.PropertyField(_id);
+			GUI.enabled = true;
+
+			GUILayout.Space(10);
+			EditorGUILayout.BeginHorizontal();
+			GUI.enabled = !EditorUtility.IsPersistent(target);
+			if(GUILayout.Button("Copy\nID", GUILayout.Height(32)))
+			{
+				EditorGUIUtility.systemCopyBuffer = _id.stringValue;
+			}
+			GUI.enabled = !EditorApplication.isPlaying && !EditorUtility.IsPersistent(target);
+			if(GUILayout.Button("Duplicate", GUILayout.Height(32)))
+			{
+				Duplicate();
+			}
+			GUI.enabled = _hasPrefab && !EditorApplication.isPlaying && !EditorUtility.IsPersistent(target);
+			if(GUILayout.Button("Apply\nChanges", GUILayout.Height(32)))
+			{
+				ApplyChangesToPrefab();
+			}
+			GUI.enabled = false;
+			EditorGUILayout.EndHorizontal();
+
+			serializedObject.ApplyModifiedProperties();
+		}
+
+		protected void Duplicate()
+		{
+			GameObject targetGameObject = ((UniqueIdentifier)target).gameObject;
+			GameObject targetRoot = PrefabUtility.FindRootGameObjectWithSameParentPrefab(targetGameObject);
+			GameObject duplicate = null;
+			
+			if(targetRoot != null && targetRoot == targetGameObject)
+			{
+				GameObject prefab = PrefabUtility.GetPrefabParent(targetRoot) as GameObject;
+				duplicate = PrefabUtility.InstantiatePrefab(prefab) as GameObject;
+
+				UniqueIdentifier[] identifiers = duplicate.GetComponentsInChildren<UniqueIdentifier>();
+				for(int i = 0; i < identifiers.Length; i++)
+				{
+					identifiers[i].ChacheID();
+				}
+
+				PropertyModification[] pm = RemoveIDModifications(PrefabUtility.GetPropertyModifications(targetRoot));
+				PrefabUtility.SetPropertyModifications(duplicate, pm);
+			}
+			else
+			{
+				duplicate = GameObject.Instantiate(targetGameObject) as GameObject;
+				
+				UniqueIdentifier[] identifiers = duplicate.GetComponentsInChildren<UniqueIdentifier>();
+				for(int i = 0; i < identifiers.Length; i++)
+				{
+					if(!(identifiers[i] is GameObjectSerializer))
+					{
+						identifiers[i].GenerateNewID();
+					}
+				}
+			}
+
+			duplicate.transform.parent = targetGameObject.transform.parent;
+			duplicate.name = targetGameObject.name;
+			Selection.activeGameObject = duplicate;
+		}
+
+		private PropertyModification[] RemoveIDModifications(PropertyModification[] pm)
+		{
+			List<PropertyModification> modif = new List<PropertyModification>(pm.Length + 1);
+			for(int i = 0; i < pm.Length; i++)
+			{
+				Type targetType = pm[i].target.GetType();
+				if((targetType != typeof(UniqueIdentifier) && targetType != typeof(GameObjectSerializer)) || pm[i].propertyPath != "_id")
+				{
+					modif.Add(pm[i]);
+				}
+			}
+
+			return modif.ToArray();
+		}
+
+		protected void ApplyChangesToPrefab()
+		{
+			var targetRoot = PrefabUtility.FindRootGameObjectWithSameParentPrefab(((UniqueIdentifier)target).gameObject);
+			
+			UniqueIdentifier[] identifiers = targetRoot.GetComponentsInChildren<UniqueIdentifier>();
+			for(int i = 0; i < identifiers.Length; i++)
+			{
+				identifiers[i].ChacheID();
+			}
+			
+			GameObject prefab = PrefabUtility.GetPrefabParent(targetRoot) as GameObject;
+			prefab = PrefabUtility.ReplacePrefab(targetRoot, prefab, ReplacePrefabOptions.ConnectToPrefab);
+			
+			UniqueIdentifier[] prefabIdentifiers = prefab.GetComponentsInChildren<UniqueIdentifier>(true);
+			for(int i = 0; i < prefabIdentifiers.Length; i++)
+			{
+				prefabIdentifiers[i].ClearID();
+			}
+			
+			AssetDatabase.SaveAssets();
 		}
 	}
 }

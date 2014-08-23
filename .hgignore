@@ -2,6 +2,7 @@ syntax: glob
 #Junk folders
 Library/*
 Temp/*
+Build/*
 Assets/Tests/*
 Assets/Tests*
 
