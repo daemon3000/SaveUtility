@@ -21,68 +21,45 @@
 #endregion
 using UnityEngine;
 using System;
+using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 
 namespace TeamUtility.IO.SaveUtility
 {
-	public sealed class SaveGameLoader : MonoBehaviour 
+	public sealed class PlayerPrefsDeserializer : IDataDeserializer
 	{
-		private readonly Color overlay = Color.white;
+		private string _key;
 		
-		private bool _canShowOverlay = false;
-		private Texture2D _overlayTexture;
-		private ReadOnlyDictionary<string, object> _saveTable;
-		
-		private void Awake()
+		public PlayerPrefsDeserializer(string key)
 		{
-			_overlayTexture = new Texture2D(1, 1);
-			_overlayTexture.SetPixel(0, 0, overlay);
-			_overlayTexture.Apply();
-			
-			DontDestroyOnLoad(gameObject);
+			_key = key;
 		}
 		
-		private void OnGUI()
+		public ReadOnlyDictionary<string, object> Deserialize()
 		{
-			if(_canShowOverlay)
+			if(PlayerPrefs.HasKey(_key))
 			{
-				GUI.depth = -100;
-				GUI.DrawTexture(new Rect(0.0f, 0.0f, Screen.width, Screen.height), 
-								_overlayTexture, ScaleMode.StretchToFill);
+				Dictionary<string, object> data;
+				data = MiniJson.Deserialize(PlayerPrefs.GetString(_key)) as Dictionary<string, object>;
+				
+				return new ReadOnlyDictionary<string, object>(data);
 			}
-		}
-		
-		private IEnumerator OnLevelWasLoaded()
-		{
-			SaveUtility saveUtility = SaveUtility.GetInstance(false);
-			if(saveUtility != null)
-			{
-				saveUtility.SetSaveTable(_saveTable);
-			}
-			
-			yield return null;
-			_canShowOverlay = false;
-			UnityEngine.Object.Destroy(gameObject);
-		}
-		
-		public void Load(IDataDeserializer deserializer)
-		{
-			if(deserializer == null)
-				throw new ArgumentNullException("deserializer");
-			
-			_canShowOverlay = true;
-			_saveTable = deserializer.Deserialize();
-			if(_saveTable == null)
-				throw new NullReferenceException("Save table is null. Cannot load save game.");
 
-			Application.LoadLevel((string)_saveTable["sceneName"]);
+			return null;
 		}
 		
-		public static SaveGameLoader CreateInstance()
+		public ReadOnlyDictionary<string, object> GetCustomMetadata()
 		{
-			GameObject saveLoaderGO = new GameObject("SaveLoader");
-			return saveLoaderGO.AddComponent<SaveGameLoader>();
+			if(PlayerPrefs.HasKey(_key + ".meta"))
+			{
+				Dictionary<string, object> data;
+				data = MiniJson.Deserialize(PlayerPrefs.GetString(_key + ".meta")) as Dictionary<string, object>;
+				
+				return new ReadOnlyDictionary<string, object>(data);
+			}
+			
+			return null;
 		}
 	}
 }

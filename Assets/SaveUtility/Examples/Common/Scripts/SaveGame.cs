@@ -8,22 +8,26 @@ public sealed class SaveGame : MonoBehaviour
 {
 	public enum SaveFormat
 	{
-		Binary, Json
+		Binary, Json, PlayerPrefs
 	}
 	
 	public SaveFormat saveFormat;
 	public int exampleCount;
-	private string _saveFile;
+	private string _saveLocation;
 	
 	private void Awake()
 	{
 		if(saveFormat == SaveFormat.Binary)
 		{
-			_saveFile = Path.Combine(GetSaveFolder(), "example_" + exampleCount + ".bin");
+			_saveLocation = Path.Combine(GetSaveFolder(), "example_" + exampleCount + ".bin");
+		}
+		else if(saveFormat == SaveFormat.Json)
+		{
+			_saveLocation = Path.Combine(GetSaveFolder(), "example_" + exampleCount + ".json");
 		}
 		else
 		{
-			_saveFile = Path.Combine(GetSaveFolder(), "example_" + exampleCount + ".json");
+			_saveLocation = "example_" + exampleCount + "_save";
 		}
 	}
 	
@@ -47,7 +51,8 @@ public sealed class SaveGame : MonoBehaviour
 		GUILayout.BeginArea(area);
 		GUILayout.Label("Press F5 to save the game");
 		GUILayout.Label("Press F9 to load the game");
-		GUILayout.Label("Save File: " + _saveFile);
+		if(saveFormat == SaveFormat.Binary || saveFormat == SaveFormat.Json)
+			GUILayout.Label("Save File: " + _saveLocation);
 		GUILayout.EndArea();
 		GUI.color = Color.white;
 	}
@@ -59,11 +64,15 @@ public sealed class SaveGame : MonoBehaviour
 			IDataSerializer serializer;
 			if(saveFormat == SaveFormat.Binary)
 			{
-				serializer = new BinarySerializer(_saveFile);
+				serializer = new BinarySerializer(_saveLocation);
+			}
+			else if(saveFormat == SaveFormat.Json)
+			{
+				serializer = new JsonSerializer(_saveLocation);
 			}
 			else
 			{
-				serializer = new JsonSerializer(_saveFile);
+				serializer = new PlayerPrefsSerializer(_saveLocation);
 			}
 			
 			SaveGameManager.Save(serializer);
@@ -73,11 +82,15 @@ public sealed class SaveGame : MonoBehaviour
 			IDataDeserializer deserializer;
 			if(saveFormat == SaveFormat.Binary)
 			{
-				deserializer = new BinaryDeserializer(_saveFile);
+				deserializer = new BinaryDeserializer(_saveLocation);
+			}
+			else if(saveFormat == SaveFormat.Json)
+			{
+				deserializer = new JsonDeserializer(_saveLocation);
 			}
 			else
 			{
-				deserializer = new JsonDeserializer(_saveFile);
+				deserializer = new PlayerPrefsDeserializer(_saveLocation);
 			}
 			
 			SaveGameManager.Load(deserializer);

@@ -21,68 +21,30 @@
 #endregion
 using UnityEngine;
 using System;
+using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 
 namespace TeamUtility.IO.SaveUtility
 {
-	public sealed class SaveGameLoader : MonoBehaviour 
+	public sealed class PlayerPrefsSerializer : IDataSerializer
 	{
-		private readonly Color overlay = Color.white;
+		private string _key;
 		
-		private bool _canShowOverlay = false;
-		private Texture2D _overlayTexture;
-		private ReadOnlyDictionary<string, object> _saveTable;
-		
-		private void Awake()
+		public PlayerPrefsSerializer(string key)
 		{
-			_overlayTexture = new Texture2D(1, 1);
-			_overlayTexture.SetPixel(0, 0, overlay);
-			_overlayTexture.Apply();
-			
-			DontDestroyOnLoad(gameObject);
+			_key = key;
 		}
 		
-		private void OnGUI()
+		public void Serialize(ReadOnlyDictionary<string, object> data)
 		{
-			if(_canShowOverlay)
-			{
-				GUI.depth = -100;
-				GUI.DrawTexture(new Rect(0.0f, 0.0f, Screen.width, Screen.height), 
-								_overlayTexture, ScaleMode.StretchToFill);
-			}
+			PlayerPrefs.SetString(_key, MiniJson.Serialize(data, false));
 		}
 		
-		private IEnumerator OnLevelWasLoaded()
+		public void Serialize(ReadOnlyDictionary<string, object> data, ReadOnlyDictionary<string, object> metadata)
 		{
-			SaveUtility saveUtility = SaveUtility.GetInstance(false);
-			if(saveUtility != null)
-			{
-				saveUtility.SetSaveTable(_saveTable);
-			}
-			
-			yield return null;
-			_canShowOverlay = false;
-			UnityEngine.Object.Destroy(gameObject);
-		}
-		
-		public void Load(IDataDeserializer deserializer)
-		{
-			if(deserializer == null)
-				throw new ArgumentNullException("deserializer");
-			
-			_canShowOverlay = true;
-			_saveTable = deserializer.Deserialize();
-			if(_saveTable == null)
-				throw new NullReferenceException("Save table is null. Cannot load save game.");
-
-			Application.LoadLevel((string)_saveTable["sceneName"]);
-		}
-		
-		public static SaveGameLoader CreateInstance()
-		{
-			GameObject saveLoaderGO = new GameObject("SaveLoader");
-			return saveLoaderGO.AddComponent<SaveGameLoader>();
+			PlayerPrefs.SetString(_key, MiniJson.Serialize(data, false));
+			PlayerPrefs.SetString(_key + ".meta", MiniJson.Serialize(metadata, false));
 		}
 	}
 }

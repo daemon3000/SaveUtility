@@ -38,13 +38,18 @@ namespace TeamUtility.IO.SaveUtility
 		
 		public ReadOnlyDictionary<string, object> Deserialize()
 		{
-			Dictionary<string, object> data;
-			using(StreamReader sr = File.OpenText(_inputFilename))
+			if(File.Exists(_inputFilename))
 			{
-				data = MiniJson.Deserialize(sr.ReadToEnd()) as Dictionary<string, object>;
+				Dictionary<string, object> data;
+				using(StreamReader sr = File.OpenText(_inputFilename))
+				{
+					data = MiniJson.Deserialize(sr.ReadToEnd()) as Dictionary<string, object>;
+				}
+				
+				return new ReadOnlyDictionary<string, object>(data);
 			}
-			
-			return new ReadOnlyDictionary<string, object>(data);
+
+			return null;
 		}
 		
 		public ReadOnlyDictionary<string, object> GetCustomMetadata()

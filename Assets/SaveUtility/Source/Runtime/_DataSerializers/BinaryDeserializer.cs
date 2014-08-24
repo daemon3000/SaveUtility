@@ -36,10 +36,15 @@ namespace TeamUtility.IO.SaveUtility
 		
 		public ReadOnlyDictionary<string, object> Deserialize()
 		{
-			BinaryFormatter bf = new BinaryFormatter();
-			Dictionary<string, object> data = bf.Deserialize(_inputFilename) as Dictionary<string, object>;
-			
-			return new ReadOnlyDictionary<string, object>(data);
+			if(File.Exists(_inputFilename))
+			{
+				BinaryFormatter bf = new BinaryFormatter();
+				Dictionary<string, object> data = bf.Deserialize(_inputFilename) as Dictionary<string, object>;
+				
+				return new ReadOnlyDictionary<string, object>(data);
+			}
+
+			return null;
 		}
 		
 		public ReadOnlyDictionary<string, object> GetCustomMetadata()
