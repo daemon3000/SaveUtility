@@ -541,6 +541,12 @@ namespace TeamUtility.IO.SaveUtility
 		{
 			return _serializableComponents;
 		}
+
+		[ContextMenu("Copy ID")]
+		private void CopyIDToSystemBuffer()
+		{
+			UnityEditor.EditorGUIUtility.systemCopyBuffer = _id;
+		}
 #endif
 		
 		#region [Static Methods]

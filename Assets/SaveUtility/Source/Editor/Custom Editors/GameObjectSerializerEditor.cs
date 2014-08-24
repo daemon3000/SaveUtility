@@ -107,17 +107,16 @@ namespace TeamUtility.Editor.IO.SaveUtility
 					pair.serialize = false;
 				}
 			}
-			GUI.enabled = !EditorUtility.IsPersistent(target);
-			if(GUILayout.Button("Copy\nID", GUILayout.Height(32)))
-			{
-				EditorGUIUtility.systemCopyBuffer = target.ID;
-			}
-			GUI.enabled = !EditorApplication.isPlaying && !EditorUtility.IsPersistent(target);
+			GUI.enabled = !EditorApplication.isPlaying && !_isPeristent;
 			if(GUILayout.Button("Duplicate", GUILayout.Height(32)))
 			{
 				Duplicate();
 			}
-			GUI.enabled = _hasPrefab && !EditorApplication.isPlaying && !EditorUtility.IsPersistent(target);
+			GUI.enabled = _hasPrefab && !EditorApplication.isPlaying && !_isPeristent;
+			if(GUILayout.Button("Revert\nChanges", GUILayout.Height(32)))
+			{
+				RevertInstanceChanges();
+			}
 			if(GUILayout.Button("Apply\nChanges", GUILayout.Height(32)))
 			{
 				ApplyChangesToPrefab();

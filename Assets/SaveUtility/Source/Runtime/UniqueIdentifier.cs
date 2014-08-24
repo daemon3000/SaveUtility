@@ -82,6 +82,12 @@ namespace TeamUtility.IO.SaveUtility
 		{
 			_id = GetUniqueID();
 		}
+
+		[ContextMenu("Copy ID")]
+		private void CopyIDToSystemBuffer()
+		{
+			UnityEditor.EditorGUIUtility.systemCopyBuffer = _id;
+		}
 #endif
 		
 		public static string GetUniqueID()

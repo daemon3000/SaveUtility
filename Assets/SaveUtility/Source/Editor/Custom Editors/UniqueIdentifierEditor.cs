@@ -32,6 +32,7 @@ namespace TeamUtility.Editor.IO.SaveUtility
 	{
 		protected SerializedProperty _id;
 		protected bool _hasPrefab = false;
+		protected bool _isPeristent = false;
 
 		protected virtual void OnEnable()
 		{
@@ -39,6 +40,7 @@ namespace TeamUtility.Editor.IO.SaveUtility
 
 			var targetRoot = PrefabUtility.FindRootGameObjectWithSameParentPrefab(((UniqueIdentifier)target).gameObject);
 			_hasPrefab = PrefabUtility.GetPrefabParent(targetRoot) != null;
+			_isPeristent = EditorUtility.IsPersistent(target);
 		}
 
 		public override void OnInspectorGUI()
@@ -51,17 +53,16 @@ namespace TeamUtility.Editor.IO.SaveUtility
 
 			GUILayout.Space(10);
 			EditorGUILayout.BeginHorizontal();
-			GUI.enabled = !EditorUtility.IsPersistent(target);
-			if(GUILayout.Button("Copy\nID", GUILayout.Height(32)))
-			{
-				EditorGUIUtility.systemCopyBuffer = _id.stringValue;
-			}
-			GUI.enabled = !EditorApplication.isPlaying && !EditorUtility.IsPersistent(target);
+			GUI.enabled = !EditorApplication.isPlaying && !_isPeristent;
 			if(GUILayout.Button("Duplicate", GUILayout.Height(32)))
 			{
 				Duplicate();
 			}
-			GUI.enabled = _hasPrefab && !EditorApplication.isPlaying && !EditorUtility.IsPersistent(target);
+			GUI.enabled = _hasPrefab && !EditorApplication.isPlaying && !_isPeristent;
+			if(GUILayout.Button("Revert\nChanges", GUILayout.Height(32)))
+			{
+				RevertInstanceChanges();
+			}
 			if(GUILayout.Button("Apply\nChanges", GUILayout.Height(32)))
 			{
 				ApplyChangesToPrefab();
@@ -124,6 +125,19 @@ namespace TeamUtility.Editor.IO.SaveUtility
 			}
 
 			return modif.ToArray();
+		}
+
+		protected void RevertInstanceChanges()
+		{
+			var targetRoot = PrefabUtility.FindRootGameObjectWithSameParentPrefab(((UniqueIdentifier)target).gameObject);
+			
+			UniqueIdentifier[] identifiers = targetRoot.GetComponentsInChildren<UniqueIdentifier>();
+			for(int i = 0; i < identifiers.Length; i++)
+			{
+				identifiers[i].ChacheID();
+			}
+			
+			PrefabUtility.RevertPrefabInstance(targetRoot);
 		}
 
 		protected void ApplyChangesToPrefab()
