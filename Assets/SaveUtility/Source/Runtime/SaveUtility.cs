@@ -46,7 +46,7 @@ namespace TeamUtility.IO.SaveUtility
 		}
 		#endregion
 
-		public const string VERSION = "1.8.0.0";
+		public const string VERSION = "1.9.0.0";
 		private const int MAX_FRAMES_TO_GET_DATA = 5;
 
 		public event Action Saved;

@@ -6,29 +6,23 @@ using TeamUtility.IO.SaveUtility;
 
 public sealed class SaveGame : MonoBehaviour 
 {
-	public enum SaveFormat
+	private enum SaveFormat
 	{
 		Binary, Json, PlayerPrefs
 	}
 	
-	public SaveFormat saveFormat;
 	public int exampleCount;
-	private string _saveLocation;
+	private string _saveLocationBinary;
+	private string _saveLocationJson;
+	private string _saveKeyPlayerPrefs;
+	private SaveFormat _saveFormat;
 	
 	private void Awake()
 	{
-		if(saveFormat == SaveFormat.Binary)
-		{
-			_saveLocation = PathHelper.Combine(GetSaveFolder(), "example_" + exampleCount + ".bin");
-		}
-		else if(saveFormat == SaveFormat.Json)
-		{
-			_saveLocation = PathHelper.Combine(GetSaveFolder(), "example_" + exampleCount + ".json");
-		}
-		else
-		{
-			_saveLocation = "example_" + exampleCount + "_save";
-		}
+		_saveFormat = SaveFormat.Json;
+		_saveLocationBinary = PathHelper.Combine(GetSaveFolder(), "example_" + exampleCount + ".bin");
+		_saveLocationJson = PathHelper.Combine(GetSaveFolder(), "example_" + exampleCount + ".json");
+		_saveKeyPlayerPrefs = "example_" + exampleCount + "_save";
 	}
 
 	private string GetSaveFolder()
@@ -55,15 +49,37 @@ public sealed class SaveGame : MonoBehaviour
 	
 	private void OnGUI()
 	{
-		GUI.color = Color.red;
-		Rect area = new Rect(0.0f, Screen.height - 80.0f, Screen.width, 80.0f);
+
+		Rect area = new Rect(0.0f, Screen.height - 100.0f, Screen.width, 100.0f);
 		GUILayout.BeginArea(area);
+		GUILayout.BeginHorizontal();
+		GUILayout.Label("Current Save Format:", GUILayout.Width(160));
+		if(GUILayout.Button(_saveFormat.ToString(), GUILayout.Width(200)))
+		{
+			CycleSaveFormat();
+		}
+		GUILayout.EndHorizontal();
+		GUI.color = Color.red;
 		GUILayout.Label("Press F5 to save the game");
 		GUILayout.Label("Press F9 to load the game");
-		if(saveFormat == SaveFormat.Binary || saveFormat == SaveFormat.Json)
-			GUILayout.Label("Save File: " + _saveLocation);
-		GUILayout.EndArea();
+		if(_saveFormat == SaveFormat.Binary)
+			GUILayout.Label("Save File: " + _saveLocationBinary);
+		else if(_saveFormat == SaveFormat.Json)
+			GUILayout.Label("Save File: " + _saveLocationJson);
+		else
+			GUILayout.Label("Save Key: " + _saveKeyPlayerPrefs);
 		GUI.color = Color.white;
+		GUILayout.EndArea();
+	}
+
+	private void CycleSaveFormat()
+	{
+		if(_saveFormat == SaveFormat.Binary)
+			_saveFormat = SaveFormat.Json;
+		else if(_saveFormat == SaveFormat.Json)
+			_saveFormat = SaveFormat.PlayerPrefs;
+		else
+			_saveFormat = SaveFormat.Binary;
 	}
 	
 	private void Update()
@@ -71,17 +87,17 @@ public sealed class SaveGame : MonoBehaviour
 		if(Input.GetKeyDown(KeyCode.F5))
 		{
 			IDataSerializer serializer;
-			if(saveFormat == SaveFormat.Binary)
+			if(_saveFormat == SaveFormat.Binary)
 			{
-				serializer = new BinarySerializer(_saveLocation);
+				serializer = new BinarySerializer(_saveLocationBinary);
 			}
-			else if(saveFormat == SaveFormat.Json)
+			else if(_saveFormat == SaveFormat.Json)
 			{
-				serializer = new JsonSerializer(_saveLocation);
+				serializer = new JsonSerializer(_saveLocationJson);
 			}
 			else
 			{
-				serializer = new PlayerPrefsSerializer(_saveLocation);
+				serializer = new PlayerPrefsSerializer(_saveKeyPlayerPrefs);
 			}
 			
 			SaveGameManager.Save(serializer);
@@ -89,17 +105,17 @@ public sealed class SaveGame : MonoBehaviour
 		else if(Input.GetKeyDown(KeyCode.F9))
 		{
 			IDataDeserializer deserializer;
-			if(saveFormat == SaveFormat.Binary)
+			if(_saveFormat == SaveFormat.Binary)
 			{
-				deserializer = new BinaryDeserializer(_saveLocation);
+				deserializer = new BinaryDeserializer(_saveLocationBinary);
 			}
-			else if(saveFormat == SaveFormat.Json)
+			else if(_saveFormat == SaveFormat.Json)
 			{
-				deserializer = new JsonDeserializer(_saveLocation);
+				deserializer = new JsonDeserializer(_saveLocationJson);
 			}
 			else
 			{
-				deserializer = new PlayerPrefsDeserializer(_saveLocation);
+				deserializer = new PlayerPrefsDeserializer(_saveKeyPlayerPrefs);
 			}
 			
 			SaveGameManager.Load(deserializer);
