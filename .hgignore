@@ -16,4 +16,6 @@ Assembly-Boo*
 *.usertasks
 *.orig.meta
 *.orig
+*.pfx
+*.pfx.meta
 

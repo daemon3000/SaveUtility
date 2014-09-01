@@ -30,43 +30,72 @@ namespace TeamUtility.IO.SaveUtility
 	public sealed class JsonSerializer : IDataSerializer
 	{
 		private string _outputFilename;
+		private string _metadataFilename;
 		
 		public JsonSerializer(string outputFilename)
 		{
+#if UNITY_STANDALONE || UNITY_METRO || UNITY_METRO_8_1 || UNITY_EDITOR
 			_outputFilename = outputFilename;
+			_metadataFilename = PathHelper.ChangeExtension(_outputFilename, "meta");
+#else
+			_outputFilename = null;
+			_metadataFilename = null;
+			Debug.LogError("You cannot use JsonSerializer on the current platform");
+#endif
 		}
 		
 		public void Serialize(ReadOnlyDictionary<string, object> data)
 		{
-			using(StreamWriter sw = File.CreateText(_outputFilename))
-			{
-#if UNITY_EDITOR
-				sw.Write(MiniJson.Serialize(data, true));
+			if(data == null)
+				throw new ArgumentNullException("data");
+
+			if(_outputFilename == null)
+				return;
+
+#if UNITY_EDITOR || SAVEUTILITY_DEVBUILD
+			string output = MiniJson.Serialize(data, true);
 #else
-				sw.Write(MiniJson.Serialize(data, false));
+			string output = MiniJson.Serialize(data, false);
 #endif
+
+#if UNITY_STANDALONE || UNITY_EDITOR
+			using(System.IO.StreamWriter sw = System.IO.File.CreateText(_outputFilename))
+			{
+				sw.Write(output);
 			}
+#elif UNITY_METRO || UNITY_METRO_8_1
+			UnityEngine.Windows.File.WriteAllBytes(_outputFilename, System.Text.Encoding.Unicode.GetBytes(output));
+#endif
 		}
 		
 		public void Serialize(ReadOnlyDictionary<string, object> data, ReadOnlyDictionary<string, object> metadata)
 		{
-			using(StreamWriter sw = File.CreateText(_outputFilename))
-			{
-#if UNITY_EDITOR
-				sw.Write(MiniJson.Serialize(data, true));
+			if(data == null)
+				throw new ArgumentNullException("data");
+			if(metadata == null)
+				throw new ArgumentNullException("metadata");
+
+#if UNITY_EDITOR || SAVEUTILITY_DEVBUILD
+			string output = MiniJson.Serialize(data, true);
+			string metaoutput = MiniJson.Serialize(metadata, true);
 #else
-				sw.Write(MiniJson.Serialize(data, false));
+			string output = MiniJson.Serialize(data, false);
+			string metaoutput = MiniJson.Serialize(metadata, false);
 #endif
-			}
-			
-			using(StreamWriter sw = File.CreateText(Path.ChangeExtension(_outputFilename, "meta")))
+
+#if UNITY_STANDALONE || UNITY_EDITOR
+			using(System.IO.StreamWriter sw = System.IO.File.CreateText(_outputFilename))
 			{
-#if UNITY_EDITOR
-				sw.Write(MiniJson.Serialize(metadata, true));
-#else
-				sw.Write(MiniJson.Serialize(metadata, false));
-#endif
+				sw.Write(output);
 			}
+			using(System.IO.StreamWriter sw = System.IO.File.CreateText(_metadataFilename))
+			{
+				sw.Write(metaoutput);
+			}
+#elif UNITY_METRO || UNITY_METRO_8_1
+			UnityEngine.Windows.File.WriteAllBytes(_outputFilename, System.Text.Encoding.Unicode.GetBytes(output));
+			UnityEngine.Windows.File.WriteAllBytes(_metadataFilename, System.Text.Encoding.Unicode.GetBytes(metaoutput));
+#endif
 		}
 	}
 }

@@ -24,6 +24,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using SystemConvert = System.Convert;
+#if UNITY_WINRT
+using System.Reflection;
+#endif
 
 namespace TeamUtility.IO.SaveUtility
 {
@@ -161,7 +164,7 @@ namespace TeamUtility.IO.SaveUtility
 		
 		public static object ToEnum(string value, Type enumType)
 		{
-			if(!enumType.IsEnum)
+			if(!IsEnum(enumType))
 				throw new ArgumentException("The type you are trying to cast to is not an enumeration.", "value");
 
 			if(string.IsNullOrEmpty(value)) {
@@ -174,6 +177,16 @@ namespace TeamUtility.IO.SaveUtility
 				string message = string.Format("Cannot cast string to {0}.", enumType.Name);
 				throw new InvalidCastException(message);
 			}
+		}
+
+		private static bool IsEnum(Type type)
+		{
+#if UNITY_WINRT && !UNITY_EDITOR
+			TypeInfo typeInfo = type.GetTypeInfo();
+			return typeInfo.IsEnum;
+#else
+			return type.IsEnum;
+#endif
 		}
 	}
 }

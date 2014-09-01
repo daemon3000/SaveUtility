@@ -47,6 +47,11 @@ namespace TeamUtility.Editor.IO.SaveUtility
 		{
 			serializedObject.Update();
 			EditorGUILayout.Space();
+			if(!_isPeristent && _hasPrefab)
+			{
+				EditorGUILayout.HelpBox("Do not use the Revert and Apply buttons located at the top of the inspector. Use the buttons located below.", MessageType.Warning);
+				EditorGUILayout.Space();
+			}
 			GUI.enabled = false;
 			EditorGUILayout.PropertyField(_id);
 			GUI.enabled = true;

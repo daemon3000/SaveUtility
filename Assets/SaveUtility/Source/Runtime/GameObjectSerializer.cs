@@ -25,6 +25,11 @@ using System.Linq;
 using System.Reflection;
 using System.Collections;
 using System.Collections.Generic;
+#if UNITY_WINRT && !UNITY_EDITOR
+using _Type = System.Reflection.TypeInfo;
+#else
+using _Type = System.Type;
+#endif
 
 namespace TeamUtility.IO.SaveUtility
 {
@@ -47,8 +52,8 @@ namespace TeamUtility.IO.SaveUtility
 		}
 		#endregion
 		
-		private static Dictionary<Type, IComponentSerializer> _customSerializerTable;
-		private static Dictionary<Type, ITypeConverter> _typeConverters;
+		private static Dictionary<_Type, IComponentSerializer> _customSerializerTable;
+		private static Dictionary<_Type, ITypeConverter> _typeConverters;
 
 		[SerializeField] private List<ComponentStatusPair> _serializableComponents = new List<ComponentStatusPair>();
 		private SaveUtility _saveUtility = null;
@@ -144,7 +149,7 @@ namespace TeamUtility.IO.SaveUtility
 					continue;
 				
 				Component component = pair.component;
-				Type componentType = component.GetType();
+				_Type componentType = GetTypeOf(component);
 				
 				if(component is MonoBehaviour)
 				{
@@ -176,7 +181,7 @@ namespace TeamUtility.IO.SaveUtility
 					continue;
 				
 				Component component = pair.component;
-				Type componentType = component.GetType();
+				_Type componentType = GetTypeOf(component);
 				Dictionary<string, object> componentData = (Dictionary<string, object>)data[componentType.FullName];
 				
 				if(component is MonoBehaviour)
@@ -216,14 +221,18 @@ namespace TeamUtility.IO.SaveUtility
 		}
 		
 		#region [Component Serialization]
-		private Dictionary<string, object> SerializeComponent(Component instance, Type componentType)
+		private Dictionary<string, object> SerializeComponent(Component instance, _Type componentType)
 		{
 			Dictionary<string, object> data = new Dictionary<string, object>();
+#if UNITY_WINRT && !UNITY_EDITOR
+			IEnumerable<FieldInfo> fields = from fi in componentType.DeclaredFields
+											where fi.IsDefined(typeof(SaveFieldAttribute), false) select fi;
+#else
 			BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | 
 										BindingFlags.Default | BindingFlags.Instance;
 			IEnumerable<FieldInfo> fields = from fi in componentType.GetFields(bindingFlags)
 											where fi.IsDefined(typeof(SaveFieldAttribute), false) select fi;
-			
+#endif
 			foreach(FieldInfo fi in fields)
 			{
 				object value = GetFieldValue(instance, fi);
@@ -238,46 +247,75 @@ namespace TeamUtility.IO.SaveUtility
 			object rawValue = fieldInfo.GetValue(instance);
 			object value = null;
 			
-			if(rawValue == null || fieldType.IsEnum || IsPrimitive(fieldType))
+			if(rawValue == null || IsEnum(fieldType) || IsPrimitive(fieldType))
 			{
 				value = rawValue;
 			}
-			else if(_typeConverters.ContainsKey(fieldType))
+			else if(IsAssignableFrom(typeof(Component), fieldType) || IsAssignableFrom(typeof(UnityEngine.Object), fieldType) || HasTypeConverter(fieldType))
 			{
+#if UNITY_WINRT && !UNITY_EDITOR
+				value = _typeConverters[fieldType.GetTypeInfo()].ConvertFrom(rawValue);
+#else
 				value = _typeConverters[fieldType].ConvertFrom(rawValue);
+#endif
 			}
-			else if(typeof(Component).IsAssignableFrom(fieldType))
-			{
-				value = _typeConverters[typeof(Component)].ConvertFrom(rawValue);
-			}
-			else if(typeof(UnityEngine.Object).IsAssignableFrom(fieldType))
-			{
-				value = _typeConverters[typeof(UnityEngine.Object)].ConvertFrom(rawValue);
-			}
-			else if(typeof(IList).IsAssignableFrom(fieldType))
+			else if(IsAssignableFrom(typeof(IList), fieldType))
 			{
 				value = GetListValue(instance, fieldInfo, fieldType);
 			}
-			else if(typeof(IDictionary).IsAssignableFrom(fieldType))
+			else if(IsAssignableFrom(typeof(IDictionary), fieldType))
 			{
-				value = GetDictionaryValue(instance, fieldInfo);
+				value = GetDictionaryValue(instance, fieldInfo, fieldType);
 			}
 			
 			return value;
 		}
-		
+
+		private bool IsEnum(Type type)
+		{
+#if UNITY_WINRT && !UNITY_EDITOR
+			return type.GetTypeInfo().IsEnum;
+#else
+			return type.IsEnum;
+#endif
+		}
+
 		private bool IsPrimitive(Type fieldType)
 		{
 			return (fieldType == typeof(bool) || fieldType == typeof(int) || fieldType == typeof(float) ||
 					fieldType == typeof(char) || fieldType == typeof(string) || fieldType == typeof(double) ||
 					fieldType == typeof(long) || fieldType == typeof(byte));
 		}
-		
+
+		private bool IsAssignableFrom(Type sourceType, Type destType)
+		{
+#if UNITY_WINRT && !UNITY_EDITOR
+			return sourceType.GetTypeInfo().IsAssignableFrom(destType.GetTypeInfo());
+#else
+			return sourceType.IsAssignableFrom(destType);
+#endif
+		}
+
+		private bool HasTypeConverter(Type fieldType)
+		{
+#if UNITY_WINRT && !UNITY_EDITOR
+			return _typeConverters.ContainsKey(fieldType.GetTypeInfo());
+#else
+			return _typeConverters.ContainsKey(fieldType);
+#endif
+		}
+
 		private object GetListValue(Component instance, FieldInfo fieldInfo, Type fieldType)
 		{
-			Type elementType = typeof(System.Array).IsAssignableFrom(fieldType) ? fieldType.GetElementType() :
-																				  fieldType.GetProperty("Item").PropertyType;
-			if(elementType.IsEnum || IsPrimitive(elementType))
+#if UNITY_WINRT && !UNITY_EDITOR
+			Type elementType = IsAssignableFrom(typeof(System.Array), fieldType) ? fieldType.GetTypeInfo().GetElementType() :
+																					fieldType.GetTypeInfo().GetDeclaredProperty("Item").PropertyType;
+#else
+			Type elementType = IsAssignableFrom(typeof(System.Array), fieldType) ? fieldType.GetElementType() :
+																				   fieldType.GetProperty("Item").PropertyType;
+#endif
+
+			if(IsEnum(elementType) || IsPrimitive(elementType))
 			{
 				return fieldInfo.GetValue(instance);
 			}
@@ -301,29 +339,27 @@ namespace TeamUtility.IO.SaveUtility
 		
 		private ITypeConverter GetTypeConverter(Type type)
 		{
-			if(_typeConverters.ContainsKey(type))
+			if(IsAssignableFrom(typeof(Component), type) || IsAssignableFrom(typeof(UnityEngine.Object), type) || HasTypeConverter(type))
 			{
+#if UNITY_WINRT && !UNITY_EDITOR
+				return _typeConverters[type.GetTypeInfo()];
+#else
 				return _typeConverters[type];
-			}
-			else if(typeof(Component).IsAssignableFrom(type))
-			{
-				return _typeConverters[typeof(Component)];
-			}
-			else if(typeof(UnityEngine.Object).IsAssignableFrom(type))
-			{
-				return _typeConverters[typeof(UnityEngine.Object)];
+#endif
 			}
 			
 			return null;
 		}
 		
-		private object GetDictionaryValue(Component instance, FieldInfo fieldInfo)
+		private object GetDictionaryValue(Component instance, FieldInfo fieldInfo, Type fieldType)
 		{
-			Type[] genericArguments = fieldInfo.FieldType.GetGenericArguments();
-			if(genericArguments[0] != typeof(string)) {
+#if UNITY_WINRT && !UNITY_EDITOR
+			Type[] genericArguments = fieldType.GetTypeInfo().GenericTypeArguments;
+#else
+			Type[] genericArguments = fieldType.GetGenericArguments();
+#endif
+			if(genericArguments[0] != typeof(string))
 				return null;
-//				throw new NotSupportedException(string.Format("Unable to save dictionary. Expected key of type string, got key of type {0}", entry.Key.GetType().Name));
-			}
 			
 			Dictionary<string, object> value = new Dictionary<string, object>();
 			IDictionary rawValue = fieldInfo.GetValue(instance) as IDictionary;
@@ -331,7 +367,7 @@ namespace TeamUtility.IO.SaveUtility
 			foreach(DictionaryEntry entry in rawValue)
 			{
 				Type valueType = entry.Value.GetType();
-				if(valueType.IsEnum || IsPrimitive(valueType))
+				if(IsEnum(valueType) || IsPrimitive(valueType))
 				{
 					value.Add((string)entry.Key, entry.Value);
 				}
@@ -351,14 +387,20 @@ namespace TeamUtility.IO.SaveUtility
 			
 			return value;
 		}
-		
-		private void DeserializeComponent(Component instance, Type componentType, Dictionary<string, object> data)
+		#endregion
+
+		#region [Component Deserialization]
+		private void DeserializeComponent(Component instance, _Type componentType, Dictionary<string, object> data)
 		{
+#if UNITY_WINRT && !UNITY_EDITOR
+			IEnumerable<FieldInfo> fields = from fi in componentType.DeclaredFields
+											where fi.IsDefined(typeof(SaveFieldAttribute), false) select fi;
+#else
 			BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | 
 										BindingFlags.Default | BindingFlags.Instance;
 			IEnumerable<FieldInfo> fields = from fi in componentType.GetFields(bindingFlags)
 											where fi.IsDefined(typeof(SaveFieldAttribute), false) select fi;
-			
+#endif
 			object value = null;
 			foreach(FieldInfo fi in fields)
 			{
@@ -372,7 +414,7 @@ namespace TeamUtility.IO.SaveUtility
 		private void SetFieldValue(Component instance, FieldInfo fieldInfo, object value)
 		{
 			Type fieldType = fieldInfo.FieldType;
-			if(fieldType.IsEnum)
+			if(IsEnum(fieldType))
 			{
 				fieldInfo.SetValue(instance, Convert.ToEnum(value, fieldType));
 			}
@@ -380,26 +422,21 @@ namespace TeamUtility.IO.SaveUtility
 			{
 				fieldInfo.SetValue(instance, System.Convert.ChangeType(value, fieldType));
 			}
-			else if(_typeConverters.ContainsKey(fieldType))
+			else if(IsAssignableFrom(typeof(Component), fieldType) || IsAssignableFrom(typeof(UnityEngine.Object), fieldType) || HasTypeConverter(fieldType))
 			{
+#if UNITY_WINRT && !UNITY_EDITOR
+				ITypeConverter converter = _typeConverters[fieldType.GetTypeInfo()];
+				fieldInfo.SetValue(instance, converter.ConvertTo(value));
+#else
 				ITypeConverter converter = _typeConverters[fieldType];
 				fieldInfo.SetValue(instance, converter.ConvertTo(value));
+#endif
 			}
-			else if(typeof(Component).IsAssignableFrom(fieldType))
-			{
-				ITypeConverter converter = _typeConverters[typeof(Component)];
-				fieldInfo.SetValue(instance, converter.ConvertTo(value));
-			}
-			else if(typeof(UnityEngine.Object).IsAssignableFrom(fieldType))
-			{
-				ITypeConverter converter = _typeConverters[typeof(UnityEngine.Object)];
-				fieldInfo.SetValue(instance, converter.ConvertTo(value));
-			}
-			else if(typeof(IList).IsAssignableFrom(fieldType))
+			else if(IsAssignableFrom(typeof(IList), fieldType))
 			{
 				SetListValue(instance, fieldInfo, fieldType, value);
 			}
-			else if(typeof(IDictionary).IsAssignableFrom(fieldType))
+			else if(IsAssignableFrom(typeof(IDictionary), fieldType))
 			{
 				SetDictionaryValue(instance, fieldInfo, fieldType, value);
 			}
@@ -407,9 +444,15 @@ namespace TeamUtility.IO.SaveUtility
 		
 		private void SetListValue(Component instance, FieldInfo fieldInfo, Type fieldType, object value)
 		{
+#if UNITY_WINRT && !UNITY_EDITOR
+			bool isArray = IsAssignableFrom(typeof(System.Array), fieldType);
+			Type elementType = isArray ? fieldType.GetTypeInfo().GetElementType() :
+										 fieldType.GetTypeInfo().GetDeclaredProperty("Item").PropertyType;
+#else
 			bool isArray = typeof(System.Array).IsAssignableFrom(fieldType);
 			Type elementType = isArray ? fieldType.GetElementType() :
 										 fieldType.GetProperty("Item").PropertyType;
+#endif
 			IList<object> rawList = value as IList<object>;
 			
 			if(elementType == typeof(object))
@@ -421,7 +464,7 @@ namespace TeamUtility.IO.SaveUtility
 					fieldInfo.SetValue(instance, rawList);
 				}
 			}
-			if(elementType.IsEnum || IsPrimitive(elementType))
+			if(IsEnum(elementType) || IsPrimitive(elementType))
 			{
 				if(isArray) {
 					fieldInfo.SetValue(instance, PopulateArray(elementType, rawList, null));
@@ -456,7 +499,7 @@ namespace TeamUtility.IO.SaveUtility
 				}
 				else
 				{
-					if(elementType.IsEnum) {
+					if(IsEnum(elementType)) {
 						array.SetValue(Convert.ToEnum(rawValues[i], elementType), i);
 					}
 					else {
@@ -470,8 +513,13 @@ namespace TeamUtility.IO.SaveUtility
 		
 		private IList PopulateList(Type elementType, IList<object> rawValues, ITypeConverter converter)
 		{
+#if UNITY_WINRT && !UNITY_EDITOR
+			Type listType = typeof(List<>).GetTypeInfo().MakeGenericType(elementType);
+			object list = Activator.CreateInstance(listType);
+#else
 			Type listType = typeof(List<>).MakeGenericType(elementType);
 			object list = Activator.CreateInstance(listType);
+#endif
 			
 			foreach(object value in rawValues)
 			{
@@ -481,7 +529,7 @@ namespace TeamUtility.IO.SaveUtility
 				}
 				else
 				{
-					if(elementType.IsEnum) {
+					if(IsEnum(elementType)) {
 						((IList)list).Add(Convert.ToEnum(value, elementType));
 					}
 					else {
@@ -495,14 +543,22 @@ namespace TeamUtility.IO.SaveUtility
 		
 		private void SetDictionaryValue(Component instance, FieldInfo fieldInfo, Type fieldType, object value)
 		{
+#if UNITY_WINRT && !UNITY_EDITOR
+			Type[] genericArguments = fieldType.GetTypeInfo().GenericTypeArguments;
+#else
 			Type[] genericArguments = fieldType.GetGenericArguments();
-			if(genericArguments[0] != typeof(string)) {
+#endif
+			if(genericArguments[0] != typeof(string))
 				return;
-			}
 			
 			Dictionary<string, object> rawDictionary = value as Dictionary<string, object>;
+#if UNITY_WINRT && !UNITY_EDITOR
+			Type dictionaryType = typeof(Dictionary<,>).GetTypeInfo().MakeGenericType(genericArguments[0], genericArguments[1]);
+			object dictionary = Activator.CreateInstance(dictionaryType);
+#else
 			Type dictionaryType = typeof(Dictionary<,>).MakeGenericType(genericArguments[0], genericArguments[1]);
 			object dictionary = Activator.CreateInstance(dictionaryType);
+#endif
 			
 			foreach(KeyValuePair<string, object> entry in rawDictionary)
 			{
@@ -510,7 +566,7 @@ namespace TeamUtility.IO.SaveUtility
 				{
 					((IDictionary)dictionary).Add(entry.Key, entry.Value);
 				}
-				else if(genericArguments[1].IsEnum)
+				else if(IsEnum(genericArguments[1]))
 				{
 					((IDictionary)dictionary).Add(entry.Key, Convert.ToEnum((string)entry.Value, genericArguments[1]));
 				}
@@ -548,86 +604,101 @@ namespace TeamUtility.IO.SaveUtility
 			UnityEditor.EditorGUIUtility.systemCopyBuffer = _id;
 		}
 #endif
-		
-		#region [Static Methods]
-		public static IEnumerable<Type> GetTypeConverters()
-		{
-			return GetTypeConverters(Assembly.GetExecutingAssembly());
-		}
-		
-		public static IEnumerable<Type> GetTypeConverters(Assembly assembly)
-		{
-			foreach(Type type in assembly.GetTypes()) 
-			{
-				if(type.GetCustomAttributes(typeof(CustomSerializerAttribute), false).Length > 0 &&
-					type.GetInterfaces().Contains(typeof(ITypeConverter))) 
-				{
-					yield return type;
-				}
-			}
-		}
-		
-		public static IEnumerable<Type> GetComponentSerializerTypes()
-		{
-			return GetComponentSerializerTypes(Assembly.GetExecutingAssembly());
-		}
-		
-		public static IEnumerable<Type> GetComponentSerializerTypes(Assembly assembly) 
-		{
-			foreach(Type type in assembly.GetTypes()) 
-			{
-				if(type.GetCustomAttributes(typeof(CustomSerializerAttribute), false).Length > 0 &&
-					type.GetInterfaces().Contains(typeof(IComponentSerializer))) 
-				{
-					yield return type;
-				}
-			}
-		}
-		
 		public static bool IsComponentSerializable(Component component)
 		{
 			if(component is MonoBehaviour)
 			{
-				return (component is ISerializableMonoBehaviour) || CanBeAutoSerialized(component.GetType());
+				return (component is ISerializableMonoBehaviour) || CanBeAutoSerialized(GetTypeOf(component));
 			}
 			
 			return HasCustomSerializer(component);
 		}
 		
-		private static bool CanBeAutoSerialized(Type monoBehaviourType)
+		private static bool CanBeAutoSerialized(_Type monoBehaviourType)
 		{
 			return monoBehaviourType.IsDefined(typeof(SaveComponentAttribute), false);
 		}
 		
 		private static bool HasCustomSerializer(Component component)
 		{
-			Type componentType = component.GetType();
-			foreach(Type typeOfSerializer in GetComponentSerializerTypes())
+			_Type componentType = GetTypeOf(component);
+			foreach(_Type typeOfSerializer in GetComponentSerializerTypes())
 			{
-				object[] attributes = typeOfSerializer.GetCustomAttributes(typeof(CustomSerializerAttribute), false);
-				CustomSerializerAttribute attribute = attributes[0] as CustomSerializerAttribute;
-				
+				CustomSerializerAttribute attribute = GetCustomSerializerAttribute(typeOfSerializer);
+#if UNITY_WINRT && !UNITY_EDITOR
+				if(attribute.typeToSerialize.GetTypeInfo() == componentType)
+					return true;
+#else
 				if(attribute.typeToSerialize == componentType)
 					return true;
+#endif
 			}
 			
 			return false;
+		}
+
+		private static IEnumerable<_Type> GetTypeConverters()
+		{
+			foreach(_Type type in GetTypesInExecutingAssembly()) 
+			{
+#if UNITY_WINRT && !UNITY_EDITOR
+				if(type.GetCustomAttributes(typeof(CustomSerializerAttribute), false).Count() > 0 &&
+				   type.ImplementedInterfaces.Contains(typeof(ITypeConverter))) 
+				{
+					yield return type;
+				}
+#else
+				if(type.GetCustomAttributes(typeof(CustomSerializerAttribute), false).Length > 0 &&
+					type.GetInterfaces().Contains(typeof(ITypeConverter))) 
+				{
+					yield return type;
+				}
+#endif
+			}
+		}
+		
+		private static IEnumerable<_Type> GetComponentSerializerTypes() 
+		{
+			foreach(_Type type in GetTypesInExecutingAssembly()) 
+			{
+#if UNITY_WINRT && !UNITY_EDITOR
+				if(type.GetCustomAttributes(typeof(CustomSerializerAttribute), false).Count() > 0 &&
+				   type.ImplementedInterfaces.Contains(typeof(IComponentSerializer))) 
+				{
+					yield return type;
+				}
+#else
+				if(type.GetCustomAttributes(typeof(CustomSerializerAttribute), false).Length > 0 &&
+					type.GetInterfaces().Contains(typeof(IComponentSerializer))) 
+				{
+					yield return type;
+				}
+#endif
+			}
 		}
 		
 		private static void BuildCustomSerializerTable()
 		{
 			if(_customSerializerTable == null) {
-				_customSerializerTable = new Dictionary<Type, IComponentSerializer>();
+				_customSerializerTable = new Dictionary<_Type, IComponentSerializer>();
 			}
 			else {
 				_customSerializerTable.Clear();
 			}
 			
-			foreach(Type typeOfSerializer in GetComponentSerializerTypes())
+			foreach(_Type typeOfSerializer in GetComponentSerializerTypes())
 			{
-				object[] attributes = typeOfSerializer.GetCustomAttributes(typeof(CustomSerializerAttribute), false);
-				CustomSerializerAttribute attribute = attributes[0] as CustomSerializerAttribute;
-				
+				CustomSerializerAttribute attribute = GetCustomSerializerAttribute(typeOfSerializer);
+#if UNITY_WINRT && !UNITY_EDITOR
+				if(!_customSerializerTable.ContainsKey(attribute.typeToSerialize.GetTypeInfo())) 
+				{
+					IComponentSerializer serializer = Activator.CreateInstance(typeOfSerializer.AsType()) as IComponentSerializer;
+					if(serializer != null)
+					{
+						_customSerializerTable.Add(attribute.typeToSerialize.GetTypeInfo(), serializer);
+					}
+				}
+#else
 				if(!_customSerializerTable.ContainsKey(attribute.typeToSerialize)) 
 				{
 					IComponentSerializer serializer = Activator.CreateInstance(typeOfSerializer) as IComponentSerializer;
@@ -636,23 +707,30 @@ namespace TeamUtility.IO.SaveUtility
 						_customSerializerTable.Add(attribute.typeToSerialize, serializer);
 					}
 				}
+#endif
 			}
 		}
 		
 		private static void SetTypeConverters()
 		{
-			if(_typeConverters == null) {
-				_typeConverters = new Dictionary<Type, ITypeConverter>();
-			}
-			else {
+			if(_typeConverters == null)
+				_typeConverters = new Dictionary<_Type, ITypeConverter>();
+			else
 				_typeConverters.Clear();
-			}
 			
-			foreach(Type typeOfConverter in GetTypeConverters())
+			foreach(_Type typeOfConverter in GetTypeConverters())
 			{
-				object[] attributes = typeOfConverter.GetCustomAttributes(typeof(CustomSerializerAttribute), false);
-				CustomSerializerAttribute attribute = attributes[0] as CustomSerializerAttribute;
-				
+				CustomSerializerAttribute attribute = GetCustomSerializerAttribute(typeOfConverter);
+#if UNITY_WINRT && !UNITY_EDITOR
+				if(!_typeConverters.ContainsKey(attribute.typeToSerialize.GetTypeInfo())) 
+				{
+					ITypeConverter converter = Activator.CreateInstance(typeOfConverter.AsType()) as ITypeConverter;
+					if(converter != null)
+					{
+						_typeConverters.Add(attribute.typeToSerialize.GetTypeInfo(), converter);
+					}
+				}
+#else
 				if(!_typeConverters.ContainsKey(attribute.typeToSerialize)) 
 				{
 					ITypeConverter converter = Activator.CreateInstance(typeOfConverter) as ITypeConverter;
@@ -661,8 +739,32 @@ namespace TeamUtility.IO.SaveUtility
 						_typeConverters.Add(attribute.typeToSerialize, converter);
 					}
 				}
+#endif
 			}
 		}
-		#endregion
+
+		private static _Type GetTypeOf(object value)
+		{
+#if UNITY_WINRT && !UNITY_EDITOR
+			return value.GetType().GetTypeInfo();
+#else
+			return value.GetType();
+#endif
+		}
+
+		private static IEnumerable<_Type> GetTypesInExecutingAssembly()
+		{
+#if UNITY_WINRT && !UNITY_EDITOR
+			return typeof(GameObjectSerializer).GetTypeInfo().Assembly.DefinedTypes;
+#else
+			return Assembly.GetExecutingAssembly().GetTypes();
+#endif
+		}
+
+		private static CustomSerializerAttribute GetCustomSerializerAttribute(_Type type)
+		{
+			var attributes = type.GetCustomAttributes(typeof(CustomSerializerAttribute), false);
+			return attributes.First() as CustomSerializerAttribute;
+		}
 	}
 }

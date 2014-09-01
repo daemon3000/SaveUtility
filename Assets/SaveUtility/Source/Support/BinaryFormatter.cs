@@ -23,6 +23,9 @@ using System;
 using System.IO;
 using System.Collections;
 using System.Collections.Generic;
+#if UNITY_WINRT
+using System.Reflection;
+#endif
 
 namespace TeamUtility.IO
 {
@@ -49,10 +52,24 @@ namespace TeamUtility.IO
 
 		public object Deserialize(string filename)
 		{
+#if UNITY_STANDALONE || UNITY_EDITOR
 			using(Stream stream = File.OpenRead(filename))
 			{
 				return Deserialize(stream);
 			}
+#elif UNITY_METRO
+			byte[] data = UnityEngine.Windows.File.ReadAllBytes(filename);
+			if(data != null)
+			{
+				return Deserialize(data);
+			}
+			else
+			{
+				return null;
+			}
+#else
+			return null;
+#endif
 		}
 
 		public object Deserialize(byte[] input)
@@ -84,10 +101,15 @@ namespace TeamUtility.IO
 
 		public void Serialize(object value, string filename)
 		{
+#if UNITY_STANDALONE || UNITY_EDITOR
 			using(Stream stream = File.OpenWrite(filename))
 			{
 				Serialize(value, stream);
 			}
+#elif UNITY_METRO
+			byte[] output = Serialize(value);
+			UnityEngine.Windows.File.WriteAllBytes(filename, output);
+#endif
 		}
 
 		public byte[] Serialize(object value)
@@ -274,7 +296,7 @@ namespace TeamUtility.IO
 			{
 				WriteString((string)value, writer);
 			}
-			else if(value.GetType().IsEnum)
+			else if(IsEnum(value))
 			{
 				WriteString(value.ToString(), writer);
 			}
@@ -366,6 +388,16 @@ namespace TeamUtility.IO
 				writer.Write(pair.Key);
 				WriteValue(pair.Value, writer);
 			}
+		}
+
+		private bool IsEnum(object value)
+		{
+#if UNITY_WINRT && !UNITY_EDITOR
+			TypeInfo typeInfo = value.GetType().GetTypeInfo();
+			return typeInfo.IsEnum;
+#else
+			return value.GetType().IsEnum;
+#endif
 		}
 		#endregion
 	}

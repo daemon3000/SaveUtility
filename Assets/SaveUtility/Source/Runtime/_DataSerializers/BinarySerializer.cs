@@ -20,7 +20,6 @@
 //	ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 using System;
-using System.IO;
 using System.Collections.Generic;
 
 namespace TeamUtility.IO.SaveUtility
@@ -28,23 +27,45 @@ namespace TeamUtility.IO.SaveUtility
 	public sealed class BinarySerializer : IDataSerializer
 	{
 		private string _outputFilename;
+		private string _metadataFilename;
 		
 		public BinarySerializer(string outputFilename)
 		{
+#if UNITY_STANDALONE || UNITY_METRO || UNITY_METRO_8_1 || UNITY_EDITOR
 			_outputFilename = outputFilename;
+			_metadataFilename = PathHelper.ChangeExtension(_outputFilename, "meta");
+#else
+			_outputFilename = null;
+			_metadataFilename = null;
+			Debug.LogError("You cannot use BinarySerializer on the current platform");
+#endif
 		}
 		
 		public void Serialize(ReadOnlyDictionary<string, object> data)
 		{
-			BinaryFormatter bf = new BinaryFormatter();
-			bf.Serialize(data, _outputFilename);
+			if(data == null)
+				throw new ArgumentNullException("data");
+
+			if(_outputFilename != null)
+			{
+				BinaryFormatter bf = new BinaryFormatter();
+				bf.Serialize(data, _outputFilename);
+			}
 		}
 		
 		public void Serialize(ReadOnlyDictionary<string, object> data, ReadOnlyDictionary<string, object> metadata)
 		{
-			BinaryFormatter bf = new BinaryFormatter();
-			bf.Serialize(data, _outputFilename);
-			bf.Serialize(metadata, Path.ChangeExtension(_outputFilename, "meta"));
+			if(data == null)
+				throw new ArgumentNullException("data");
+			if(metadata == null)
+				throw new ArgumentNullException("metadata");
+
+			if(_outputFilename != null && _metadataFilename != null)
+			{
+				BinaryFormatter bf = new BinaryFormatter();
+				bf.Serialize(data, _outputFilename);
+				bf.Serialize(metadata, _metadataFilename);
+			}
 		}
 	}
 }

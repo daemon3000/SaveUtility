@@ -20,7 +20,6 @@
 //	ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 using System;
-using System.IO;
 using System.Collections.Generic;
 
 namespace TeamUtility.IO.SaveUtility
@@ -28,20 +27,36 @@ namespace TeamUtility.IO.SaveUtility
 	public sealed class BinaryDeserializer : IDataDeserializer
 	{
 		private string _inputFilename;
-		
+		private string _metadataFilename;
+
 		public BinaryDeserializer(string inputFilename)
 		{
+#if UNITY_STANDALONE || UNITY_METRO || UNITY_METRO_8_1 || UNITY_EDITOR
 			_inputFilename = inputFilename;
+			_metadataFilename = PathHelper.ChangeExtension(_inputFilename, "meta");
+#else
+			_inputFilename = null;
+			_metadataFilename = null;
+			Debug.LogError("You cannot use BinaryDeserializer on the current platform");
+#endif
 		}
 		
 		public ReadOnlyDictionary<string, object> Deserialize()
 		{
-			if(File.Exists(_inputFilename))
+#if UNITY_STANDALONE || UNITY_EDITOR
+			bool isFileValid = _inputFilename != null && System.IO.File.Exists(_inputFilename);
+#elif UNITY_METRO || UNITY_METRO_8_1
+			bool isFileValid = _inputFilename != null && UnityEngine.Windows.File.Exists(_inputFilename);
+#else
+			bool isFileValid = false;
+#endif
+			if(isFileValid)
 			{
 				BinaryFormatter bf = new BinaryFormatter();
 				Dictionary<string, object> data = bf.Deserialize(_inputFilename) as Dictionary<string, object>;
-				
-				return new ReadOnlyDictionary<string, object>(data);
+
+				if(data != null)
+					return new ReadOnlyDictionary<string, object>(data);
 			}
 
 			return null;
@@ -49,15 +64,22 @@ namespace TeamUtility.IO.SaveUtility
 		
 		public ReadOnlyDictionary<string, object> GetCustomMetadata()
 		{
-			string metafile = Path.ChangeExtension(_inputFilename, "meta");
-			if(File.Exists(metafile))
+#if UNITY_STANDALONE || UNITY_EDITOR
+			bool isFileValid = _metadataFilename != null && System.IO.File.Exists(_metadataFilename);
+#elif UNITY_METRO || UNITY_METRO_8_1
+			bool isFileValid = _metadataFilename != null && UnityEngine.Windows.File.Exists(_metadataFilename);
+#else
+			bool isFileValid = false;
+#endif
+			if(isFileValid)
 			{
 				BinaryFormatter bf = new BinaryFormatter();
-				Dictionary<string, object> data = bf.Deserialize(metafile) as Dictionary<string, object>;
-				
-				return new ReadOnlyDictionary<string, object>(data);
+				Dictionary<string, object> data = bf.Deserialize(_metadataFilename) as Dictionary<string, object>;
+
+				if(data != null)
+					return new ReadOnlyDictionary<string, object>(data);
 			}
-			
+
 			return null;
 		}
 	}

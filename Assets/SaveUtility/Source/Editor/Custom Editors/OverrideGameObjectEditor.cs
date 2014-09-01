@@ -120,37 +120,37 @@ namespace TeamUtility.Editor.IO.SaveUtility
 		}
 	}
 
-	[CustomEditor(typeof(GameObject))]
-	[CanEditMultipleObjects]
-	[OverrideInternalEditorTypeMark("GameObjectInspector")]
-	public class GameObjectEditorOverride : OverrideInternalEditor
-	{
-		private bool _isPersistent;
-		private bool _hasPrefab;
-
-		private void OnEnable()
-		{
-			_isPersistent = EditorUtility.IsPersistent(target);
-
-			var targetRoot = PrefabUtility.FindRootGameObjectWithSameParentPrefab((GameObject)target);
-			_hasPrefab = PrefabUtility.GetPrefabParent(targetRoot) != null;
-		}
-
-		protected override void OnHeaderGUI()
-		{
-			base.OnHeaderGUI();
-
-			if(!_isPersistent)
-			{
-				if(_hasPrefab)
-				{
-					UniqueIdentifier uid = ((GameObject)target).GetComponent<UniqueIdentifier>();
-					if(uid != null)
-					{
-						EditorGUILayout.HelpBox(string.Format("Do not use the Revert and Apply buttons. Use the buttons provided by the {0} component.", uid.GetType().Name), MessageType.Warning);
-					}
-				}
-			}
-		}
-	}
+//	[CustomEditor(typeof(GameObject))]
+//	[CanEditMultipleObjects]
+//	[OverrideInternalEditorTypeMark("GameObjectInspector")]
+//	public class GameObjectEditorOverride : OverrideInternalEditor
+//	{
+//		private bool _isPersistent;
+//		private bool _hasPrefab;
+//
+//		private void OnEnable()
+//		{
+//			_isPersistent = EditorUtility.IsPersistent(target);
+//
+//			var targetRoot = PrefabUtility.FindRootGameObjectWithSameParentPrefab((GameObject)target);
+//			_hasPrefab = PrefabUtility.GetPrefabParent(targetRoot) != null;
+//		}
+//
+//		protected override void OnHeaderGUI()
+//		{
+//			base.OnHeaderGUI();
+//
+//			if(!_isPersistent)
+//			{
+//				if(_hasPrefab)
+//				{
+//					UniqueIdentifier uid = ((GameObject)target).GetComponent<UniqueIdentifier>();
+//					if(uid != null)
+//					{
+//						EditorGUILayout.HelpBox(string.Format("Do not use the Revert and Apply buttons. Use the buttons provided by the {0} component.", uid.GetType().Name), MessageType.Warning);
+//					}
+//				}
+//			}
+//		}
+//	}
 }

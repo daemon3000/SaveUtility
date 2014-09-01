@@ -30,23 +30,49 @@ namespace TeamUtility.IO.SaveUtility
 	public sealed class JsonDeserializer : IDataDeserializer
 	{
 		private string _inputFilename;
+		private string _metadataFilename;
 		
 		public JsonDeserializer(string inputFilename)
 		{
+#if UNITY_STANDALONE || UNITY_METRO || UNITY_METRO_8_1 || UNITY_EDITOR
 			_inputFilename = inputFilename;
+			_metadataFilename = PathHelper.ChangeExtension(_inputFilename, "meta");
+#else
+			_inputFilename = null;
+			_metadataFilename = null;
+			Debug.LogError("You cannot use JsonDeserializer on the current platform");
+#endif
 		}
 		
 		public ReadOnlyDictionary<string, object> Deserialize()
 		{
-			if(File.Exists(_inputFilename))
+#if UNITY_STANDALONE || UNITY_EDITOR
+			bool isFileValid = _inputFilename != null && System.IO.File.Exists(_inputFilename);
+#elif UNITY_METRO || UNITY_METRO_8_1
+			bool isFileValid = _inputFilename != null && UnityEngine.Windows.File.Exists(_inputFilename);
+#else
+			bool isFileValid = false;
+#endif
+
+			if(isFileValid)
 			{
+#if UNITY_STANDALONE || UNITY_EDITOR
 				Dictionary<string, object> data;
 				using(StreamReader sr = File.OpenText(_inputFilename))
 				{
 					data = MiniJson.Deserialize(sr.ReadToEnd()) as Dictionary<string, object>;
 				}
-				
-				return new ReadOnlyDictionary<string, object>(data);
+
+				if(data != null)
+					return new ReadOnlyDictionary<string, object>(data);
+#else
+				byte[] rawInput = UnityEngine.Windows.File.ReadAllBytes(_inputFilename);
+				string input = System.Text.Encoding.Unicode.GetString(rawInput, 0, rawInput.Length);
+
+				Dictionary<string, object> data = MiniJson.Deserialize(input) as Dictionary<string, object>;
+				if(data != null)
+					return new ReadOnlyDictionary<string, object>(data);
+#endif
 			}
 
 			return null;
@@ -54,16 +80,33 @@ namespace TeamUtility.IO.SaveUtility
 		
 		public ReadOnlyDictionary<string, object> GetCustomMetadata()
 		{
-			string metafile = Path.ChangeExtension(_inputFilename, "meta");
-			if(File.Exists(metafile))
+#if UNITY_STANDALONE || UNITY_EDITOR
+			bool isFileValid = _metadataFilename != null && System.IO.File.Exists(_metadataFilename);
+#elif UNITY_METRO || UNITY_METRO_8_1
+			bool isFileValid = _metadataFilename != null && UnityEngine.Windows.File.Exists(_metadataFilename);
+#else
+			bool isFileValid = false;
+#endif
+			
+			if(isFileValid)
 			{
+#if UNITY_STANDALONE || UNITY_EDITOR
 				Dictionary<string, object> data;
-				using(StreamReader sr = File.OpenText(metafile))
+				using(StreamReader sr = File.OpenText(_metadataFilename))
 				{
 					data = MiniJson.Deserialize(sr.ReadToEnd()) as Dictionary<string, object>;
 				}
 				
-				return new ReadOnlyDictionary<string, object>(data);
+				if(data != null)
+					return new ReadOnlyDictionary<string, object>(data);
+#else
+				byte[] rawInput = UnityEngine.Windows.File.ReadAllBytes(_metadataFilename);
+				string input = System.Text.Encoding.Unicode.GetString(rawInput, 0, rawInput.Length);
+				
+				Dictionary<string, object> data = MiniJson.Deserialize(input) as Dictionary<string, object>;
+				if(data != null)
+					return new ReadOnlyDictionary<string, object>(data);
+#endif
 			}
 			
 			return null;

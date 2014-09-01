@@ -30,7 +30,7 @@ using TeamUtility.IO.SaveUtility;
 namespace TeamUtility.Editor.IO.SaveUtility
 {
 	[InitializeOnLoad]
-	public sealed class HierarchyExtension : MonoBehaviour 
+	public sealed class HierarchyExtension
 	{
 		private static bool _drawIcons;
 		private static Texture _uidIcon;
@@ -65,7 +65,7 @@ namespace TeamUtility.Editor.IO.SaveUtility
 			_gameObejctIcon = EditorGUIUtility.Load("SaveUtility/Icons/game_object.png") as Texture;
 			_saveUtilityIcon = EditorGUIUtility.Load("SaveUtility/Icons/save_utility.png") as Texture;
 			
-			_drawIcons = EditorPrefs.GetBool("HierarchyExtension.drawIcons", false);
+			_drawIcons = EditorPrefs.GetBool("HierarchyExtension.drawIcons", true);
 			if(_drawIcons)
 			{
 				EditorApplication.hierarchyWindowItemOnGUI += HandleHierarchyItemGUI;

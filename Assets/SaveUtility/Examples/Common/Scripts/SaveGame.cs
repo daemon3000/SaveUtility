@@ -19,29 +19,38 @@ public sealed class SaveGame : MonoBehaviour
 	{
 		if(saveFormat == SaveFormat.Binary)
 		{
-			_saveLocation = Path.Combine(GetSaveFolder(), "example_" + exampleCount + ".bin");
+			_saveLocation = PathHelper.Combine(GetSaveFolder(), "example_" + exampleCount + ".bin");
 		}
 		else if(saveFormat == SaveFormat.Json)
 		{
-			_saveLocation = Path.Combine(GetSaveFolder(), "example_" + exampleCount + ".json");
+			_saveLocation = PathHelper.Combine(GetSaveFolder(), "example_" + exampleCount + ".json");
 		}
 		else
 		{
 			_saveLocation = "example_" + exampleCount + "_save";
 		}
 	}
-	
+
 	private string GetSaveFolder()
 	{
+#if UNITY_WINRT && !UNITY_EDITOR
+		string saveFolder = PathHelper.Combine(UnityEngine.Windows.Directory.localFolder, "Saves");
+		if(!UnityEngine.Windows.Directory.Exists(saveFolder))
+		{
+			UnityEngine.Windows.Directory.CreateDirectory(saveFolder);
+		}
+
+		return saveFolder;
+#else
 		string documentsFolder = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
-		string saveFolder = Path.Combine(documentsFolder, @"SaveUtility\Saves");
-		
+		string saveFolder = PathHelper.Combine(documentsFolder, @"SaveUtility\Saves");
 		if(!Directory.Exists(saveFolder)) 
 		{
 			Directory.CreateDirectory(saveFolder);
 		}
 		
 		return saveFolder;
+#endif
 	}
 	
 	private void OnGUI()
