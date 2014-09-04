@@ -251,12 +251,28 @@ namespace TeamUtility.IO.SaveUtility
 			{
 				value = rawValue;
 			}
-			else if(IsAssignableFrom(typeof(Component), fieldType) || IsAssignableFrom(typeof(UnityEngine.Object), fieldType) || HasTypeConverter(fieldType))
+			else if(HasTypeConverter(fieldType))
 			{
 #if UNITY_WINRT && !UNITY_EDITOR
 				value = _typeConverters[fieldType.GetTypeInfo()].ConvertFrom(rawValue);
 #else
 				value = _typeConverters[fieldType].ConvertFrom(rawValue);
+#endif
+			}
+			else if(IsAssignableFrom(typeof(Component), fieldType))
+			{
+#if UNITY_WINRT && !UNITY_EDITOR
+				value = _typeConverters[typeof(Component).GetTypeInfo()].ConvertFrom(rawValue);
+#else
+				value = _typeConverters[typeof(Component)].ConvertFrom(rawValue);
+#endif
+			}
+			else if(IsAssignableFrom(typeof(UnityEngine.Object), fieldType))
+			{
+#if UNITY_WINRT && !UNITY_EDITOR
+				value = _typeConverters[typeof(UnityEngine.Object).GetTypeInfo()].ConvertFrom(rawValue);
+#else
+				value = _typeConverters[typeof(UnityEngine.Object)].ConvertFrom(rawValue);
 #endif
 			}
 			else if(IsAssignableFrom(typeof(IList), fieldType))
@@ -339,12 +355,28 @@ namespace TeamUtility.IO.SaveUtility
 		
 		private ITypeConverter GetTypeConverter(Type type)
 		{
-			if(IsAssignableFrom(typeof(Component), type) || IsAssignableFrom(typeof(UnityEngine.Object), type) || HasTypeConverter(type))
+			if(HasTypeConverter(type))
 			{
 #if UNITY_WINRT && !UNITY_EDITOR
 				return _typeConverters[type.GetTypeInfo()];
 #else
 				return _typeConverters[type];
+#endif
+			}
+			if(IsAssignableFrom(typeof(Component), type))
+			{
+#if UNITY_WINRT && !UNITY_EDITOR
+				return _typeConverters[typeof(Component).GetTypeInfo()];
+#else
+				return _typeConverters[typeof(Component)];
+#endif
+			}
+			if(IsAssignableFrom(typeof(UnityEngine.Object), type))
+			{
+#if UNITY_WINRT && !UNITY_EDITOR
+				return _typeConverters[typeof(UnityEngine.Object).GetTypeInfo()];
+#else
+				return _typeConverters[typeof(UnityEngine.Object)];
 #endif
 			}
 			
@@ -422,13 +454,33 @@ namespace TeamUtility.IO.SaveUtility
 			{
 				fieldInfo.SetValue(instance, System.Convert.ChangeType(value, fieldType));
 			}
-			else if(IsAssignableFrom(typeof(Component), fieldType) || IsAssignableFrom(typeof(UnityEngine.Object), fieldType) || HasTypeConverter(fieldType))
+			else if(HasTypeConverter(fieldType))
 			{
 #if UNITY_WINRT && !UNITY_EDITOR
 				ITypeConverter converter = _typeConverters[fieldType.GetTypeInfo()];
 				fieldInfo.SetValue(instance, converter.ConvertTo(value));
 #else
 				ITypeConverter converter = _typeConverters[fieldType];
+				fieldInfo.SetValue(instance, converter.ConvertTo(value));
+#endif
+			}
+			else if(IsAssignableFrom(typeof(Component), fieldType))
+			{
+#if UNITY_WINRT && !UNITY_EDITOR
+				ITypeConverter converter = _typeConverters[typeof(Component).GetTypeInfo()];
+				fieldInfo.SetValue(instance, converter.ConvertTo(value));
+#else
+				ITypeConverter converter = _typeConverters[typeof(Component)];
+				fieldInfo.SetValue(instance, converter.ConvertTo(value));
+#endif
+			}
+			else if(IsAssignableFrom(typeof(UnityEngine.Object), fieldType))
+			{
+#if UNITY_WINRT && !UNITY_EDITOR
+				ITypeConverter converter = _typeConverters[typeof(UnityEngine.Object).GetTypeInfo()];
+				fieldInfo.SetValue(instance, converter.ConvertTo(value));
+#else
+				ITypeConverter converter = _typeConverters[typeof(UnityEngine.Object)];
 				fieldInfo.SetValue(instance, converter.ConvertTo(value));
 #endif
 			}
