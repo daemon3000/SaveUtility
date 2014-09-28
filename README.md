@@ -2,13 +2,8 @@
 SaveUtility is an open-source save plugin for Unity, designed to save entire scenes. 
 SaveUtility was influenced by [UnitySerializer ](http://whydoidoit.com/unityserializer) which unfortunately hasn’t received any recent updates.
 
-**Works only on Windows 7/8, Mac OSX and Linux. Requires the latest version of Unity.**
-
-## Installation
-- Get the newest release from the [Downloads](https://bitbucket.org/daemon3000/saveutility-for-unity3d/downloads) page
-- Import the unity package in your game project
-
-The package comes with examples and scripts that show you how to use the API.
+**Compatible with Windows 7/8 Desktop, Windows 8 Store, Mac OSX and Linux. Requires the latest version of Unity.
+The package comes with examples and scripts that show you how to use the API.**
 
 ## Known Issues
 - You can't use *Ctrl(CMD) + D* to duplicate game-objects with a *GameObjectSerializer* or *UniqueIdentifier* component because you'll end up with duplicate IDs. You have to use the **Duplicate** button located in the *GameObjectSerializer/UniqueIdentifier* inspector.
