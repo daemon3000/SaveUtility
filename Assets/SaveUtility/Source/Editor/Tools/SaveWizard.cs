@@ -1,9 +1,9 @@
-﻿#region [Copyright (c) 2013-2014 Cristian Alexandru Geambasu]
+﻿#region [Copyright (c) 2015 Cristian Alexandru Geambasu]
 //	Distributed under the terms of an MIT-style license:
 //
 //	The MIT License
 //
-//	Copyright (c) 2013-2014 Cristian Alexandru Geambasu
+//	Copyright (c) 2015 Cristian Alexandru Geambasu
 //
 //	Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
 //	and associated documentation files (the "Software"), to deal in the Software without restriction, 
@@ -40,7 +40,7 @@ namespace TeamUtility.Editor.IO.SaveUtility
 		{
 			if(_saveUtility == null) 
 			{
-				_saveUtility = SaveUtilityClass.GetInstance(false);
+				_saveUtility = SaveUtilityClass.GetInstance();
 			}
 			if(_bigLabelStyle == null) 
 			{
@@ -101,7 +101,9 @@ namespace TeamUtility.Editor.IO.SaveUtility
 			buttonPos.width = 150.0f;
 			if(GUI.Button(buttonPos, "Create SaveUtility"))
 			{
-				_saveUtility = SaveUtilityClass.GetInstance(true);
+				_saveUtility = SaveUtilityClass.GetInstance();
+				if(_saveUtility == null)
+					SaveUtilityClass.CreateInstance();
 			}
 			
 			GUILayout.EndArea();

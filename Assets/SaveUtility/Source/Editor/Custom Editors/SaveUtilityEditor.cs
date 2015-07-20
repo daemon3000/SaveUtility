@@ -1,9 +1,9 @@
-﻿#region [Copyright (c) 2013-2014 Cristian Alexandru Geambasu]
+﻿#region [Copyright (c) 2015 Cristian Alexandru Geambasu]
 //	Distributed under the terms of an MIT-style license:
 //
 //	The MIT License
 //
-//	Copyright (c) 2013-2014 Cristian Alexandru Geambasu
+//	Copyright (c) 2015 Cristian Alexandru Geambasu
 //
 //	Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
 //	and associated documentation files (the "Software"), to deal in the Software without restriction, 
@@ -34,7 +34,7 @@ namespace TeamUtility.Editor.IO.SaveUtility
 		private SerializedProperty _requiredAssets;
 		private SerializedProperty _serializers;
 		private int _toolbarSelection = 0;
-		private string[] _toolbarOptions = new string[] { "Tracked Objects", "Required Assets" };
+		private string[] _toolbarOptions = new string[] { "Tracked Objects", "Tracked Assets" };
 		
 		private void OnEnable()
 		{
@@ -110,7 +110,7 @@ namespace TeamUtility.Editor.IO.SaveUtility
 				
 				EditorGUILayout.BeginHorizontal();
 				EditorGUILayout.ObjectField(asset.objectReferenceValue, typeof(UnityEngine.Object), false);
-				if(GUILayout.Button("Remove", GUILayout.Width(24.0f)))
+				if(GUILayout.Button("Remove", GUILayout.Width(60.0f)))
 				{
 					_requiredAssets.DeleteArrayElementAtIndex(i);
 					i--;

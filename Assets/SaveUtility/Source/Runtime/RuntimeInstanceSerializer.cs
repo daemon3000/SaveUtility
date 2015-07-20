@@ -27,7 +27,7 @@ namespace TeamUtility.IO.SaveUtility
 				return null;
 			}
 			
-			SaveUtility saveUtility = SaveUtility.GetInstance(false);
+			SaveUtility saveUtility = SaveUtility.GetInstance();
 			GameObjectSerializer serializer = _instance.GetComponent<GameObjectSerializer>();
 			if(serializer != null)
 			{
@@ -43,7 +43,7 @@ namespace TeamUtility.IO.SaveUtility
 		
 		public bool Deserialize(Dictionary<string, object> data)
 		{
-			SaveUtility saveUtility = SaveUtility.GetInstance(false);
+			SaveUtility saveUtility = SaveUtility.GetInstance();
 			
 			_template = saveUtility.GetAssetByID((string)data["prefab"]) as GameObject;
 			if(_template != null)

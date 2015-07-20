@@ -1,9 +1,9 @@
-#region [Copyright (c) 2013-2014 Cristian Alexandru Geambasu]
+#region [Copyright (c) 2015 Cristian Alexandru Geambasu]
 //	Distributed under the terms of an MIT-style license:
 //
 //	The MIT License
 //
-//	Copyright (c) 2013-2014 Cristian Alexandru Geambasu
+//	Copyright (c) 2015 Cristian Alexandru Geambasu
 //
 //	Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
 //	and associated documentation files (the "Software"), to deal in the Software without restriction, 
@@ -41,8 +41,10 @@ namespace TeamUtility.IO.SaveUtility
 			dic.Add("color", Convert.FromColor(light.color));
 			dic.Add("spotAngle", light.spotAngle);
 			dic.Add("shadows", light.shadows);
+#if !UNITY_5
 			dic.Add("shadowSoftness", light.shadowSoftness);
 			dic.Add("shadowSoftnessFade", light.shadowSoftnessFade);
+#endif
 			dic.Add("shadowStrength", light.shadowStrength);
 			
 			return dic;
@@ -59,8 +61,10 @@ namespace TeamUtility.IO.SaveUtility
 			light.color = Convert.ToColor((Dictionary<string, object>)data["color"]);
 			light.spotAngle = System.Convert.ToSingle(data["spotAngle"]);
 			light.shadows = Convert.ToEnum<LightShadows>(data["shadows"]);
+#if !UNITY_5
 			light.shadowSoftness = System.Convert.ToSingle(data["shadowSoftness"]);
 			light.shadowSoftnessFade = System.Convert.ToSingle(data["shadowSoftnessFade"]);
+#endif
 			light.shadowStrength = System.Convert.ToSingle(data["shadowStrength"]);
 		}
 	}

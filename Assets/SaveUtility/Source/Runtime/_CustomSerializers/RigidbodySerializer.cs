@@ -1,9 +1,9 @@
-#region [Copyright (c) 2013-2014 Cristian Alexandru Geambasu]
+#region [Copyright (c) 2015 Cristian Alexandru Geambasu]
 //	Distributed under the terms of an MIT-style license:
 //
 //	The MIT License
 //
-//	Copyright (c) 2013-2014 Cristian Alexandru Geambasu
+//	Copyright (c) 2015 Cristian Alexandru Geambasu
 //
 //	Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
 //	and associated documentation files (the "Software"), to deal in the Software without restriction, 
@@ -37,13 +37,19 @@ namespace TeamUtility.IO.SaveUtility
 			dic.Add("freezeRotation", body.freezeRotation);
 			dic.Add("useGravity", body.useGravity);
 			dic.Add("detectCollisions", body.detectCollisions);
+#if !UNITY_5
 			dic.Add("useConeFriction", body.useConeFriction);
+#endif
 			dic.Add("drag", body.drag);
 			dic.Add("angularDrag", body.angularDrag);
 			dic.Add("mass", body.mass);
 			dic.Add("rotation", Convert.FromQuaternion(body.rotation));
+#if UNITY_5
+			dic.Add("sleepThreshold", body.sleepThreshold);
+#else
 			dic.Add("sleepVelocity", body.sleepVelocity);
 			dic.Add("sleepAngularVelocity", body.sleepAngularVelocity);
+#endif
 			dic.Add("maxAngularVelocity", body.maxAngularVelocity);
 			dic.Add("constraints", body.constraints);
 			dic.Add("collisionDetectionMode", body.collisionDetectionMode);
@@ -64,13 +70,19 @@ namespace TeamUtility.IO.SaveUtility
 			body.freezeRotation = (bool)data["freezeRotation"];
 			body.useGravity = (bool)data["useGravity"];
 			body.detectCollisions = (bool)data["detectCollisions"];
+#if !UNITY_5
 			body.useConeFriction = (bool)data["useConeFriction"];
+#endif
 			body.drag = System.Convert.ToSingle(data["drag"]);
 			body.angularDrag = System.Convert.ToSingle(data["angularDrag"]);
 			body.mass = System.Convert.ToSingle(data["mass"]);
 			body.rotation = Convert.ToQuaternion((Dictionary<string, object>)data["rotation"]);
+#if UNITY_5
+			body.sleepThreshold = System.Convert.ToSingle(data["sleepThreshold"]);
+#else
 			body.sleepVelocity = System.Convert.ToSingle(data["sleepVelocity"]);
 			body.sleepAngularVelocity = System.Convert.ToSingle(data["sleepAngularVelocity"]);
+#endif
 			body.maxAngularVelocity = System.Convert.ToSingle(data["maxAngularVelocity"]);
 			body.constraints = Convert.ToEnum<RigidbodyConstraints>(data["constraints"]);
 			body.collisionDetectionMode = Convert.ToEnum<CollisionDetectionMode>(data["collisionDetectionMode"]);

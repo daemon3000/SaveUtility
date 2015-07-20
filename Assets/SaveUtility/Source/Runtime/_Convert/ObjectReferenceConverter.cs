@@ -1,9 +1,9 @@
-﻿#region [Copyright (c) 2013-2014 Cristian Alexandru Geambasu]
+﻿#region [Copyright (c) 2015 Cristian Alexandru Geambasu]
 //	Distributed under the terms of an MIT-style license:
 //
 //	The MIT License
 //
-//	Copyright (c) 2013-2014 Cristian Alexandru Geambasu
+//	Copyright (c) 2015 Cristian Alexandru Geambasu
 //
 //	Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
 //	and associated documentation files (the "Software"), to deal in the Software without restriction, 
@@ -35,7 +35,7 @@ namespace TeamUtility.IO.SaveUtility
 		
 		public object ConvertFrom(object value)
 		{
-			SaveUtility saveUtility = SaveUtility.GetInstance(false);
+			SaveUtility saveUtility = SaveUtility.GetInstance();
 			return saveUtility.GetAssetID((UnityEngine.Object)value);
 		}
 		
@@ -45,7 +45,7 @@ namespace TeamUtility.IO.SaveUtility
 				return null;
 			}
 			
-			SaveUtility saveUtility = SaveUtility.GetInstance(false);
+			SaveUtility saveUtility = SaveUtility.GetInstance();
 			return saveUtility.GetAssetByID((string)data);
 		}
 	}
@@ -60,7 +60,7 @@ namespace TeamUtility.IO.SaveUtility
 		
 		public object ConvertFrom(object value)
 		{
-			SaveUtility saveUtility = SaveUtility.GetInstance(false);
+			SaveUtility saveUtility = SaveUtility.GetInstance();
 			GameObject gameObject = value as GameObject;
 			if(gameObject != null)
 			{
@@ -84,7 +84,7 @@ namespace TeamUtility.IO.SaveUtility
 				return null;
 			}
 			
-			SaveUtility saveUtility = SaveUtility.GetInstance(false);
+			SaveUtility saveUtility = SaveUtility.GetInstance();
 			GameObject gameObject = saveUtility.GetStoredGameObjectByID((string)data);
 			if(gameObject == null)
 			{
@@ -130,7 +130,7 @@ namespace TeamUtility.IO.SaveUtility
 				return null;
 			}
 			
-			SaveUtility saveUtility = SaveUtility.GetInstance(false);
+			SaveUtility saveUtility = SaveUtility.GetInstance();
 			Dictionary<string, object> dic = data as Dictionary<string, object>;
 			
 			return saveUtility.GetStoredComponentByID((string)dic["id"], (string)dic["type"]);

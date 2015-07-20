@@ -1,9 +1,9 @@
-﻿#region [Copyright (c) 2013-2014 Cristian Alexandru Geambasu]
+﻿#region [Copyright (c) 2015 Cristian Alexandru Geambasu]
 //	Distributed under the terms of an MIT-style license:
 //
 //	The MIT License
 //
-//	Copyright (c) 2013-2014 Cristian Alexandru Geambasu
+//	Copyright (c) 2015 Cristian Alexandru Geambasu
 //
 //	Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
 //	and associated documentation files (the "Software"), to deal in the Software without restriction, 
@@ -46,7 +46,6 @@ namespace TeamUtility.IO.SaveUtility
 		}
 		#endregion
 
-		public const string VERSION = "1.9.0.0";
 		private const int MAX_FRAMES_TO_GET_DATA = 5;
 
 		public event Action Saved;
@@ -257,7 +256,7 @@ namespace TeamUtility.IO.SaveUtility
 		
 		private void SetGameObjectSerializers(ReadOnlyDictionary<string, object> saveTable)
 		{
-			Queue<GameObjectSerializer> waitingForDestroy = new Queue<GameObjectSerializer>();
+			Queue<GameObjectSerializer> queuedForRemoval = new Queue<GameObjectSerializer>();
 			foreach(GameObjectSerializer serializer in _serializers)
 			{
 				if(saveTable.ContainsKey(serializer.ID))
@@ -266,16 +265,15 @@ namespace TeamUtility.IO.SaveUtility
 				}
 				else
 				{
-					waitingForDestroy.Enqueue(serializer);
+					queuedForRemoval.Enqueue(serializer);
 				}
 			}
 			
-			while(waitingForDestroy.Count > 0)
+			while(queuedForRemoval.Count > 0)
 			{
-				GameObjectSerializer serializer = waitingForDestroy.Dequeue();
-				if(serializer != null) {
-					UnityEngine.Object.Destroy(serializer.gameObject);
-				}
+				GameObjectSerializer serializer = queuedForRemoval.Dequeue();
+				if(serializer != null)
+					GameObject.Destroy(serializer.gameObject);
 			}
 		}
 		
@@ -296,7 +294,7 @@ namespace TeamUtility.IO.SaveUtility
 					}
 					else
 					{
-						UnityEngine.Object.Destroy(serializerGO);
+						GameObject.Destroy(serializerGO);
 					}
 				}
 			}
@@ -345,37 +343,74 @@ namespace TeamUtility.IO.SaveUtility
 		}
 		
 		#region [Static Methods]
-		public static SaveUtility GetInstance(bool createIfNull)
+		public static void Save(IDataSerializer serializer)
+		{
+			_instance.GetSaveTable((data) => {
+				serializer.Serialize(data);
+			});
+		}
+		
+		public static void Save(IDataSerializer serializer, Dictionary<string, object> customMetadata)
+		{
+			_instance.GetSaveTable((data) => {
+				serializer.Serialize(data, new ReadOnlyDictionary<string, object>(customMetadata));
+			});
+		}
+		
+		public static void Load(IDataDeserializer deserializer)
+		{
+			SaveGameLoader loader = SaveGameLoader.CreateInstance();
+			loader.Load(deserializer);
+		}
+
+		public static SaveUtility GetInstance()
 		{
 #if UNITY_EDITOR
 			if(!UnityEditor.EditorApplication.isPlaying)
 			{
 				SaveUtility[] obj = UnityEngine.Object.FindObjectsOfType(typeof(SaveUtility)) as SaveUtility[];
-				if(obj != null && obj.Length > 0) {
+				if(obj != null && obj.Length > 0)
 					return obj[0];
-				}
-				else 
-				{
-					return createIfNull ? CreateInstance() : null;
-				}
+				else
+					return null;
 			}
 #endif
-			if(_instance == null && createIfNull) {
-				return CreateInstance();
-			}
 			return _instance;
 		}
 		
-		private static SaveUtility CreateInstance()
+		public static SaveUtility CreateInstance()
 		{
-			if(_instance != null) {
+#if UNITY_EDITOR
+			if(!UnityEditor.EditorApplication.isPlaying)
+			{
+				SaveUtility[] obj = UnityEngine.Object.FindObjectsOfType(typeof(SaveUtility)) as SaveUtility[];
+				if(obj != null && obj.Length > 0)
+					return obj[0];
+
+				GameObject gameObject = new GameObject("SaveUtility");
+				SaveUtility instance = gameObject.AddComponent<SaveUtility>();
+				
+				return instance;
+			}
+			else
+			{
+				if(_instance != null)
+					return _instance;
+
+				GameObject gameObject = new GameObject("SaveUtility");
+				_instance = gameObject.AddComponent<SaveUtility>();
+				
 				return _instance;
 			}
-			
+#else
+			if(_instance != null)
+				return _instance;
+
 			GameObject gameObject = new GameObject("SaveUtility");
-			SaveUtility instance = gameObject.AddComponent<SaveUtility>();
+			_instance = gameObject.AddComponent<SaveUtility>();
 			
-			return instance;
+			return _instance;
+#endif
 		}
 		
 		public static GameObject InstantiateSavable(GameObject template)

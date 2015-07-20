@@ -100,7 +100,7 @@ public sealed class SaveGame : MonoBehaviour
 				serializer = new PlayerPrefsSerializer(_saveKeyPlayerPrefs);
 			}
 			
-			SaveGameManager.Save(serializer);
+			SaveUtility.Save(serializer);
 		}
 		else if(Input.GetKeyDown(KeyCode.F9))
 		{
@@ -118,7 +118,7 @@ public sealed class SaveGame : MonoBehaviour
 				deserializer = new PlayerPrefsDeserializer(_saveKeyPlayerPrefs);
 			}
 			
-			SaveGameManager.Load(deserializer);
+			SaveUtility.Load(deserializer);
 		}
 	}
 }

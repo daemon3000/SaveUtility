@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using TeamUtility.IO.SaveUtility;
 
 [SaveComponent]
-public sealed class ManualSaving : MonoBehaviour, ISerializableMonoBehaviour
+public sealed class ManualSaving : MonoBehaviour, ISavableMonoBehaviour
 {
 	private int _gold;
 	private int _hp;

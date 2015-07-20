@@ -1,9 +1,9 @@
-﻿#region [Copyright (c) 2013-2014 Cristian Alexandru Geambasu]
+﻿#region [Copyright (c) 2015 Cristian Alexandru Geambasu]
 //	Distributed under the terms of an MIT-style license:
 //
 //	The MIT License
 //
-//	Copyright (c) 2013-2014 Cristian Alexandru Geambasu
+//	Copyright (c) 2015 Cristian Alexandru Geambasu
 //
 //	Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
 //	and associated documentation files (the "Software"), to deal in the Software without restriction, 
@@ -55,11 +55,9 @@ namespace TeamUtility.IO.SaveUtility
 		
 		private IEnumerator OnLevelWasLoaded()
 		{
-			SaveUtility saveUtility = SaveUtility.GetInstance(false);
+			SaveUtility saveUtility = SaveUtility.GetInstance();
 			if(saveUtility != null)
-			{
 				saveUtility.SetSaveTable(_saveTable);
-			}
 			
 			yield return null;
 			_canShowOverlay = false;

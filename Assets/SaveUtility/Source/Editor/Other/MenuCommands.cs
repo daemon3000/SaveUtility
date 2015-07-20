@@ -1,9 +1,9 @@
-﻿#region [Copyright (c) 2013-2014 Cristian Alexandru Geambasu]
+﻿#region [Copyright (c) 2015 Cristian Alexandru Geambasu]
 //	Distributed under the terms of an MIT-style license:
 //
 //	The MIT License
 //
-//	Copyright (c) 2013-2014 Cristian Alexandru Geambasu
+//	Copyright (c) 2015 Cristian Alexandru Geambasu
 //
 //	Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
 //	and associated documentation files (the "Software"), to deal in the Software without restriction, 
@@ -32,7 +32,11 @@ namespace TeamUtility.Editor.IO.SaveUtility
 		[MenuItem("Team Utility/Save Utility/Create Save Utility", false, 0)]
 		public static void CreateSaveUtility()
 		{
-			Selection.activeObject = TeamUtility.IO.SaveUtility.SaveUtility.GetInstance(true);
+			var saveUtility = TeamUtility.IO.SaveUtility.SaveUtility.GetInstance();
+			if(saveUtility == null)
+				saveUtility = TeamUtility.IO.SaveUtility.SaveUtility.CreateInstance();
+
+			Selection.activeObject = saveUtility;
 		}
 		
 		[MenuItem("Team Utility/Save Utility/Add GameObject Serializer %#g", true, 0)]
@@ -114,13 +118,13 @@ namespace TeamUtility.Editor.IO.SaveUtility
 		[MenuItem("Team Utility/Save Utility/Add To Required Assets", true, 0)]
 		private static bool ValidateRequirePrefab()
 		{
-			return (TeamUtility.IO.SaveUtility.SaveUtility.GetInstance(false) != null && Selection.objects.Length > 0);
+			return (TeamUtility.IO.SaveUtility.SaveUtility.GetInstance() != null && Selection.objects.Length > 0);
 		}
 		
 		[MenuItem("Team Utility/Save Utility/Add To Required Assets", false, 0)]
 		public static void RequirePrefab()
 		{
-			TeamUtility.IO.SaveUtility.SaveUtility saveUtility = TeamUtility.IO.SaveUtility.SaveUtility.GetInstance(false);
+			TeamUtility.IO.SaveUtility.SaveUtility saveUtility = TeamUtility.IO.SaveUtility.SaveUtility.GetInstance();
 			if(saveUtility != null) 
 			{
 				foreach(UnityEngine.Object asset in Selection.objects)
@@ -133,7 +137,7 @@ namespace TeamUtility.Editor.IO.SaveUtility
 		[MenuItem("Team Utility/Save Utility/About", false, 120)]
 		private static void About()
 		{
-			string about = string.Format("SaveUtility v{0}, MIT licensed\nCopyright \u00A9 2013-2014 Cristian Alexandru Geambasu\nhttps://bitbucket.org/daemon3000/saveutility-for-unity3d", TeamUtility.IO.SaveUtility.SaveUtility.VERSION);
+			string about = string.Format("SaveUtility, MIT licensed\nCopyright \u00A9 2015 Cristian Alexandru Geambasu\nhttps://bitbucket.org/daemon3000/saveutility-for-unity3d");
 			EditorUtility.DisplayDialog("About", about, "OK");
 		}
 	}
